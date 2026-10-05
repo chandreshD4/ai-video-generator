@@ -10,6 +10,9 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.EditText
+import android.app.AlertDialog
+import android.content.Context
 
 class MainActivity : Activity() {
 
@@ -181,6 +184,85 @@ class MainActivity : Activity() {
         return row
     }
 
+    private fun showNewProjectDialog() {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
+        }
+
+        val nameInput = EditText(this).apply {
+            hint = "Project name"
+            textSize = 16f
+            setSingleLine(true)
+        }
+
+        val scriptInput = EditText(this).apply {
+            hint = "Paste your video script"
+            textSize = 15f
+            gravity = Gravity.TOP
+            minLines = 7
+            maxLines = 12
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        }
+
+        container.addView(nameInput)
+
+        val scriptParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        scriptParams.topMargin = dp(12)
+
+        container.addView(scriptInput, scriptParams)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("New Project")
+            .setView(container)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Create", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val projectName = nameInput.text.toString().trim()
+                val script = scriptInput.text.toString().trim()
+
+                if (projectName.isEmpty()) {
+                    nameInput.error = "Enter a project name"
+                    return@setOnClickListener
+                }
+
+                if (script.isEmpty()) {
+                    scriptInput.error = "Enter your script"
+                    return@setOnClickListener
+                }
+
+                val prefs = getSharedPreferences(
+                    "projects",
+                    Context.MODE_PRIVATE
+                )
+
+                prefs.edit()
+                    .putString("latest_project_name", projectName)
+                    .putString("latest_project_script", script)
+                    .apply()
+
+                dialog.dismiss()
+
+                AlertDialog.Builder(this)
+                    .setTitle("Project Created")
+                    .setMessage(
+                        "“$projectName” has been saved successfully."
+                    )
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        }
+
+        dialog.show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -309,6 +391,10 @@ class MainActivity : Activity() {
         )
         buttonParams.topMargin = dp(18)
         hero.addView(startButton, buttonParams)
+
+        startButton.setOnClickListener {
+            showNewProjectDialog()
+        }
 
         val heroParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
