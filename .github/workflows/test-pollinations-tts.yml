@@ -1,0 +1,29 @@
+name: Test Pollinations Voiceover
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tts-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate test voiceover
+        env:
+          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          curl --fail-with-body --silent --show-error \
+            "https://gen.pollinations.ai/audio/Hello%20from%20my%20AI%20Video%20Generator?voice=nova" \
+            -H "Authorization: Bearer ${POLLINATIONS_API_KEY}" \
+            -o test-voiceover.mp3
+
+          file test-voiceover.mp3
+          ls -lh test-voiceover.mp3
+
+      - name: Upload test MP3
+        uses: actions/upload-artifact@v4
+        with:
+          name: pollinations-tts-test
+          path: test-voiceover.mp3
