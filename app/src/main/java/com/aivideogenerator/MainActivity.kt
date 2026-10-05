@@ -1,50 +1,51 @@
 package com.aivideogenerator
 
 import android.app.Activity
-import android.os.Bundle
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.EditText
-import android.app.AlertDialog
-import android.content.Context
-import android.content.Intent
 
 class MainActivity : Activity() {
+
+    private lateinit var store: ProjectStore
+    private lateinit var content: LinearLayout
 
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density).toInt()
 
     private fun label(
-        text: String,
+        value: String,
         size: Float,
         color: Int,
         bold: Boolean = false
-    ): TextView {
-        return TextView(this).apply {
-            this.text = text
+    ): TextView =
+        TextView(this).apply {
+            text = value
             textSize = size
             setTextColor(color)
             gravity = Gravity.CENTER_VERTICAL
 
             if (bold) {
-                typeface = Typeface.create("sans", Typeface.BOLD)
+                typeface = Typeface.create(
+                    "sans",
+                    Typeface.BOLD
+                )
             }
         }
-    }
 
     private fun roundedBackground(
         color: Int,
         radius: Float,
         strokeColor: Int = Color.TRANSPARENT,
         strokeWidth: Int = 0
-    ): GradientDrawable {
-        return GradientDrawable().apply {
+    ): GradientDrawable =
+        GradientDrawable().apply {
             setColor(color)
             cornerRadius = dp(radius.toInt()).toFloat()
 
@@ -52,20 +53,18 @@ class MainActivity : Activity() {
                 setStroke(dp(strokeWidth), strokeColor)
             }
         }
-    }
 
     private fun gradientBackground(
         startColor: Int,
         endColor: Int,
         radius: Float
-    ): GradientDrawable {
-        return GradientDrawable(
+    ): GradientDrawable =
+        GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
             intArrayOf(startColor, endColor)
         ).apply {
             cornerRadius = dp(radius.toInt()).toFloat()
         }
-    }
 
     private fun featureCard(
         icon: String,
@@ -77,6 +76,7 @@ class MainActivity : Activity() {
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+
             setPadding(
                 dp(if (large) 22 else 18),
                 dp(if (large) 20 else 17),
@@ -101,14 +101,15 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
             background = roundedBackground(accent, 14f)
+        }
 
-            layoutParams = LinearLayout.LayoutParams(
+        card.addView(
+            iconBox,
+            LinearLayout.LayoutParams(
                 dp(if (large) 54 else 48),
                 dp(if (large) 54 else 48)
             )
-        }
-
-        card.addView(iconBox)
+        )
 
         val titleView = label(
             title,
@@ -117,12 +118,15 @@ class MainActivity : Activity() {
             true
         )
 
-        val titleParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        card.addView(
+            titleView,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(14)
+            }
         )
-        titleParams.topMargin = dp(14)
-        card.addView(titleView, titleParams)
 
         val subtitleView = label(
             subtitle,
@@ -130,30 +134,42 @@ class MainActivity : Activity() {
             Color.rgb(166, 168, 180)
         )
 
-        val subtitleParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        card.addView(
+            subtitleView,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(6)
+            }
         )
-        subtitleParams.topMargin = dp(6)
-        card.addView(subtitleView, subtitleParams)
 
-        val arrow = label("›", 28f, Color.rgb(130, 132, 145))
+        val arrow = label(
+            "›",
+            28f,
+            Color.rgb(130, 132, 145)
+        )
+
         arrow.gravity = Gravity.CENTER
 
-        val arrowParams = LinearLayout.LayoutParams(
-            dp(32),
-            dp(32)
+        card.addView(
+            arrow,
+            LinearLayout.LayoutParams(
+                dp(32),
+                dp(32)
+            ).apply {
+                gravity = Gravity.END
+                topMargin = dp(-34)
+            }
         )
-        arrowParams.gravity = Gravity.END
-        arrowParams.topMargin = dp(-34)
-        card.addView(arrow, arrowParams)
 
         return card
     }
 
     private fun sectionTitle(
         title: String,
-        action: String? = null
+        action: String? = null,
+        actionClick: (() -> Unit)? = null
     ): LinearLayout {
 
         val row = LinearLayout(this).apply {
@@ -161,10 +177,8 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        val titleView = label(title, 19f, Color.WHITE, true)
-
         row.addView(
-            titleView,
+            label(title, 19f, Color.WHITE, true),
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -179,96 +193,37 @@ class MainActivity : Activity() {
                 Color.rgb(155, 120, 255),
                 true
             )
+
+            actionView.setOnClickListener {
+                actionClick?.invoke()
+            }
+
             row.addView(actionView)
         }
 
         return row
     }
 
-    private fun showNewProjectDialog() {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(8), dp(24), 0)
-        }
-
-        val nameInput = EditText(this).apply {
-            hint = "Project name"
-            textSize = 16f
-            setSingleLine(true)
-        }
-
-        val scriptInput = EditText(this).apply {
-            hint = "Paste your video script"
-            textSize = 15f
-            gravity = Gravity.TOP
-            minLines = 7
-            maxLines = 12
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                    android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
-        }
-
-        container.addView(nameInput)
-
-        val scriptParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        scriptParams.topMargin = dp(12)
-
-        container.addView(scriptInput, scriptParams)
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("New Project")
-            .setView(container)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Create", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val projectName = nameInput.text.toString().trim()
-                val script = scriptInput.text.toString().trim()
-
-                if (projectName.isEmpty()) {
-                    nameInput.error = "Enter a project name"
-                    return@setOnClickListener
-                }
-
-                if (script.isEmpty()) {
-                    scriptInput.error = "Enter your script"
-                    return@setOnClickListener
-                }
-
-                val prefs = getSharedPreferences(
-                    "projects",
-                    Context.MODE_PRIVATE
-                )
-
-                prefs.edit()
-                    .putString("latest_project_name", projectName)
-                    .putString("latest_project_script", script)
-                    .apply()
-
-                dialog.dismiss()
-
-                AlertDialog.Builder(this)
-                    .setTitle("Project Created")
-                    .setMessage(
-                        "“$projectName” has been saved successfully."
-                    )
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-        }
-
-        dialog.show()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        store = ProjectStore(this)
+
         window.statusBarColor = Color.rgb(10, 10, 15)
         window.navigationBarColor = Color.rgb(10, 10, 15)
+
+        buildHome()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (::content.isInitialized) {
+            buildHome()
+        }
+    }
+
+    private fun buildHome() {
 
         val backgroundColor = Color.rgb(10, 10, 15)
 
@@ -282,9 +237,14 @@ class MainActivity : Activity() {
             setBackgroundColor(backgroundColor)
         }
 
-        val content = LinearLayout(this).apply {
+        content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(24), dp(20), dp(28))
+            setPadding(
+                dp(20),
+                dp(24),
+                dp(20),
+                dp(28)
+            )
         }
 
         // Header
@@ -297,35 +257,45 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
         }
 
-        val smallTitle = label(
-            "AI CREATIVE STUDIO",
-            11f,
-            Color.rgb(151, 120, 255),
-            true
-        )
-        headingArea.addView(smallTitle)
-
-        val title = label(
-            "Create something\namazing.",
-            29f,
-            Color.WHITE,
-            true
+        headingArea.addView(
+            label(
+                "AI CREATIVE STUDIO",
+                11f,
+                Color.rgb(151, 120, 255),
+                true
+            )
         )
 
-        val titleParams = LinearLayout.LayoutParams(
-            0,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            1f
+        headingArea.addView(
+            label(
+                "Create something\namazing.",
+                29f,
+                Color.WHITE,
+                true
+            ),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(5)
+            }
         )
-        titleParams.topMargin = dp(5)
 
-        header.addView(headingArea, titleParams)
+        header.addView(
+            headingArea,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        )
 
         val settings = TextView(this).apply {
             text = "⚙"
             textSize = 25f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
+
             background = roundedBackground(
                 Color.rgb(25, 26, 35),
                 15f,
@@ -336,7 +306,10 @@ class MainActivity : Activity() {
 
         header.addView(
             settings,
-            LinearLayout.LayoutParams(dp(50), dp(50))
+            LinearLayout.LayoutParams(
+                dp(50),
+                dp(50)
+            )
         )
 
         content.addView(header)
@@ -344,7 +317,12 @@ class MainActivity : Activity() {
         // Hero
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(22), dp(22), dp(22), dp(22))
+            setPadding(
+                dp(22),
+                dp(22),
+                dp(22),
+                dp(22)
+            )
 
             background = gradientBackground(
                 Color.rgb(53, 36, 105),
@@ -353,69 +331,83 @@ class MainActivity : Activity() {
             )
         }
 
-        val heroTitle = label(
-            "Turn your ideas\ninto videos",
-            23f,
+        hero.addView(
+            label(
+                "Turn your ideas\ninto videos",
+                23f,
+                Color.WHITE,
+                true
+            )
+        )
+
+        hero.addView(
+            label(
+                "Generate voice, scenes, AI clips and final videos from one place.",
+                13f,
+                Color.rgb(220, 220, 232)
+            ),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(9)
+            }
+        )
+
+        val startButton = label(
+            "＋  New Project",
+            14f,
             Color.WHITE,
             true
-        )
-        hero.addView(heroTitle)
-
-        val heroSubtitle = label(
-            "Generate voice, scenes, AI clips and final videos from one place.",
-            13f,
-            Color.rgb(220, 220, 232)
-        )
-
-        val heroSubtitleParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        heroSubtitleParams.topMargin = dp(9)
-        hero.addView(heroSubtitle, heroSubtitleParams)
-
-        val startButton = TextView(this).apply {
-            text = "＋  New Project"
-            textSize = 14f
+        ).apply {
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+
             background = roundedBackground(
                 Color.rgb(115, 75, 220),
                 14f
             )
+
+            setOnClickListener {
+                startActivity(
+                    Intent(
+                        this@MainActivity,
+                        ProjectWorkspaceActivity::class.java
+                    )
+                )
+            }
         }
 
-        val buttonParams = LinearLayout.LayoutParams(
-            dp(150),
-            dp(46)
+        hero.addView(
+            startButton,
+            LinearLayout.LayoutParams(
+                dp(150),
+                dp(46)
+            ).apply {
+                topMargin = dp(18)
+            }
         )
-        buttonParams.topMargin = dp(18)
-        hero.addView(startButton, buttonParams)
 
-        startButton.setOnClickListener {
-            startActivity(
-                Intent(this, ProjectWorkspaceActivity::class.java)
-            )
-        }
-
-        val heroParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        content.addView(
+            hero,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(24)
+            }
         )
-        heroParams.topMargin = dp(24)
-        content.addView(hero, heroParams)
 
-        // Create section
-        val createTitle = sectionTitle("Create")
-        val createParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        // Create
+        content.addView(
+            sectionTitle("Create"),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(30)
+            }
         )
-        createParams.topMargin = dp(30)
-        content.addView(createTitle, createParams)
 
-        // Voiceover
         val voice = featureCard(
             "🎙",
             "Voiceover Generator",
@@ -424,14 +416,16 @@ class MainActivity : Activity() {
             true
         )
 
-        val voiceParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        content.addView(
+            voice,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(14)
+            }
         )
-        voiceParams.topMargin = dp(14)
-        content.addView(voice, voiceParams)
 
-        // Two cards row
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
         }
@@ -450,28 +444,32 @@ class MainActivity : Activity() {
             Color.rgb(155, 75, 115)
         )
 
-        val leftParams = LinearLayout.LayoutParams(
-            0,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            1f
+        row.addView(
+            scenes,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).apply {
+                topMargin = dp(14)
+                rightMargin = dp(7)
+            }
         )
-        leftParams.topMargin = dp(14)
-        leftParams.rightMargin = dp(7)
 
-        val rightParams = LinearLayout.LayoutParams(
-            0,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            1f
+        row.addView(
+            render,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).apply {
+                topMargin = dp(14)
+                leftMargin = dp(7)
+            }
         )
-        rightParams.topMargin = dp(14)
-        rightParams.leftMargin = dp(7)
-
-        row.addView(scenes, leftParams)
-        row.addView(render, rightParams)
 
         content.addView(row)
 
-        // Enhancer
         val enhance = featureCard(
             "✨",
             "Video Quality Enhancer",
@@ -479,78 +477,38 @@ class MainActivity : Activity() {
             Color.rgb(155, 110, 55)
         )
 
-        val enhanceParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        enhanceParams.topMargin = dp(14)
-        content.addView(enhance, enhanceParams)
-
-        // Projects
-        val projectsTitle = sectionTitle(
-            "Recent Projects",
-            "View All"
+        content.addView(
+            enhance,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(14)
+            }
         )
 
-        val projectsParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+        // Recent Projects
+        content.addView(
+            sectionTitle(
+                "Recent Projects",
+                "View All"
+            ) {
+                startActivity(
+                    Intent(
+                        this@MainActivity,
+                        ProjectsActivity::class.java
+                    )
+                )
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(30)
+            }
         )
-        projectsParams.topMargin = dp(30)
-        content.addView(projectsTitle, projectsParams)
 
-        val emptyProject = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(20), dp(25), dp(20), dp(25))
-
-            background = roundedBackground(
-                Color.rgb(18, 19, 26),
-                18f,
-                Color.rgb(38, 39, 50),
-                1
-            )
-        }
-
-        val folder = label("▣", 28f, Color.rgb(105, 106, 120), true)
-        folder.gravity = Gravity.CENTER
-        emptyProject.addView(folder)
-
-        val noProjects = label(
-            "No projects yet",
-            15f,
-            Color.WHITE,
-            true
-        )
-        noProjects.gravity = Gravity.CENTER
-
-        val noProjectsParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        noProjectsParams.topMargin = dp(8)
-        emptyProject.addView(noProjects, noProjectsParams)
-
-        val projectHint = label(
-            "Your generated videos will appear here.",
-            12f,
-            Color.rgb(130, 132, 145)
-        )
-        projectHint.gravity = Gravity.CENTER
-
-        val hintParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        hintParams.topMargin = dp(4)
-        emptyProject.addView(projectHint, hintParams)
-
-        val emptyParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        emptyParams.topMargin = dp(12)
-        content.addView(emptyProject, emptyParams)
+        addRecentProjects()
 
         scroll.addView(content)
 
@@ -567,43 +525,69 @@ class MainActivity : Activity() {
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setPadding(
+                dp(8),
+                dp(8),
+                dp(8),
+                dp(8)
+            )
+
             background = roundedBackground(
                 Color.rgb(18, 19, 25),
                 20f
             )
         }
 
-        val navItems = listOf(
+        val homeNav = navItem(
             "⌂\nHome",
-            "▣\nProjects",
-            "⚙\nSettings"
+            true
         )
 
-        for ((index, item) in navItems.withIndex()) {
-            val nav = TextView(this).apply {
-                text = item
-                textSize = 11f
-                gravity = Gravity.CENTER
-                setTextColor(
-                    if (index == 0)
-                        Color.rgb(174, 135, 255)
-                    else
-                        Color.rgb(125, 127, 140)
-                )
-                typeface = Typeface.DEFAULT_BOLD
-                setPadding(0, dp(7), 0, dp(7))
-            }
+        val projectsNav = navItem(
+            "▣\nProjects",
+            false
+        )
 
-            bottom.addView(
-                nav,
-                LinearLayout.LayoutParams(
-                    0,
-                    dp(50),
-                    1f
+        val settingsNav = navItem(
+            "⚙\nSettings",
+            false
+        )
+
+        projectsNav.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    ProjectsActivity::class.java
                 )
             )
         }
+
+        bottom.addView(
+            homeNav,
+            LinearLayout.LayoutParams(
+                0,
+                dp(50),
+                1f
+            )
+        )
+
+        bottom.addView(
+            projectsNav,
+            LinearLayout.LayoutParams(
+                0,
+                dp(50),
+                1f
+            )
+        )
+
+        bottom.addView(
+            settingsNav,
+            LinearLayout.LayoutParams(
+                0,
+                dp(50),
+                1f
+            )
+        )
 
         root.addView(
             bottom,
@@ -614,5 +598,242 @@ class MainActivity : Activity() {
         )
 
         setContentView(root)
+    }
+
+    private fun navItem(
+        value: String,
+        selected: Boolean
+    ): TextView =
+        label(
+            value,
+            11f,
+            if (selected)
+                Color.rgb(174, 135, 255)
+            else
+                Color.rgb(125, 127, 140),
+            true
+        ).apply {
+            gravity = Gravity.CENTER
+            setPadding(
+                0,
+                dp(7),
+                0,
+                dp(7)
+            )
+        }
+
+    private fun addRecentProjects() {
+
+        val projects = store.getProjects()
+            .sortedByDescending { it.updatedAt }
+            .take(3)
+
+        if (projects.isEmpty()) {
+
+            val emptyProject = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+
+                setPadding(
+                    dp(20),
+                    dp(25),
+                    dp(20),
+                    dp(25)
+                )
+
+                background = roundedBackground(
+                    Color.rgb(18, 19, 26),
+                    18f,
+                    Color.rgb(38, 39, 50),
+                    1
+                )
+            }
+
+            val folder = label(
+                "▣",
+                28f,
+                Color.rgb(105, 106, 120),
+                true
+            )
+            folder.gravity = Gravity.CENTER
+
+            emptyProject.addView(folder)
+
+            val noProjects = label(
+                "No projects yet",
+                15f,
+                Color.WHITE,
+                true
+            )
+            noProjects.gravity = Gravity.CENTER
+
+            emptyProject.addView(
+                noProjects,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(8)
+                }
+            )
+
+            val hint = label(
+                "Your generated videos will appear here.",
+                12f,
+                Color.rgb(130, 132, 145)
+            )
+            hint.gravity = Gravity.CENTER
+
+            emptyProject.addView(
+                hint,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(4)
+                }
+            )
+
+            content.addView(
+                emptyProject,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(12)
+                }
+            )
+
+            return
+        }
+
+        projects.forEach { project ->
+
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(
+                    dp(15),
+                    dp(13),
+                    dp(15),
+                    dp(13)
+                )
+
+                background = roundedBackground(
+                    Color.rgb(20, 21, 28),
+                    15f,
+                    Color.rgb(38, 39, 50),
+                    1
+                )
+
+                setOnClickListener {
+                    startActivity(
+                        Intent(
+                            this@MainActivity,
+                            ProjectWorkspaceActivity::class.java
+                        ).apply {
+                            putExtra(
+                                "project_id",
+                                project.id
+                            )
+                        }
+                    )
+                }
+            }
+
+            val icon = label(
+                "🎬",
+                20f,
+                Color.WHITE
+            )
+            icon.gravity = Gravity.CENTER
+            icon.background = roundedBackground(
+                Color.rgb(53, 36, 105),
+                11f
+            )
+
+            card.addView(
+                icon,
+                LinearLayout.LayoutParams(
+                    dp(44),
+                    dp(44)
+                )
+            )
+
+            val info = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+
+            info.addView(
+                label(
+                    project.name,
+                    15f,
+                    Color.WHITE,
+                    true
+                )
+            )
+
+            val preview = project.script
+                .replace("\n", " ")
+                .trim()
+                .let {
+                    if (it.length > 55)
+                        it.take(55) + "…"
+                    else
+                        it
+                }
+
+            info.addView(
+                label(
+                    if (preview.isEmpty())
+                        "No script added"
+                    else
+                        preview,
+                    11f,
+                    Color.rgb(130, 132, 145)
+                ),
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(4)
+                }
+            )
+
+            card.addView(
+                info,
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                ).apply {
+                    leftMargin = dp(12)
+                }
+            )
+
+            card.addView(
+                label(
+                    "›",
+                    26f,
+                    Color.rgb(125, 127, 140)
+                ).apply {
+                    gravity = Gravity.CENTER
+                },
+                LinearLayout.LayoutParams(
+                    dp(30),
+                    dp(44)
+                )
+            )
+
+            content.addView(
+                card,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(10)
+                }
+            )
+        }
     }
 }
