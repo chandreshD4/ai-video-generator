@@ -147,7 +147,7 @@ class ProjectWorkspaceActivity : Activity() {
             setTextColor(Color.WHITE)
             setHintTextColor(Color.rgb(110, 112, 125))
             hint = "Project name"
-            singleLine = true
+            setSingleLine(true)
             setPadding(dp(16), 0, dp(16), 0)
             background = background(Color.rgb(23, 24, 32), 14)
         }
