@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.EditText
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 
 class MainActivity : Activity() {
 
@@ -393,7 +394,9 @@ class MainActivity : Activity() {
         hero.addView(startButton, buttonParams)
 
         startButton.setOnClickListener {
-            showNewProjectDialog()
+            startActivity(
+                Intent(this, ProjectWorkspaceActivity::class.java)
+            )
         }
 
         val heroParams = LinearLayout.LayoutParams(
