@@ -9,7 +9,9 @@ data class VideoProject(
     val name: String,
     val script: String,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val voiceoverPath: String = "",
+    val voiceoverStatus: String = "Not generated"
 )
 
 class ProjectStore(context: Context) {
@@ -35,7 +37,12 @@ class ProjectStore(context: Context) {
                         name = item.getString("name"),
                         script = item.getString("script"),
                         createdAt = item.getLong("createdAt"),
-                        updatedAt = item.getLong("updatedAt")
+                        updatedAt = item.getLong("updatedAt"),
+                        voiceoverPath = item.optString("voiceoverPath", ""),
+                        voiceoverStatus = item.optString(
+                            "voiceoverStatus",
+                            "Not generated"
+                        )
                     )
                 )
             }
@@ -85,6 +92,8 @@ class ProjectStore(context: Context) {
             item.put("script", project.script)
             item.put("createdAt", project.createdAt)
             item.put("updatedAt", project.updatedAt)
+            item.put("voiceoverPath", project.voiceoverPath)
+            item.put("voiceoverStatus", project.voiceoverStatus)
 
             array.put(item)
         }

@@ -208,12 +208,25 @@ class ProjectWorkspaceActivity : Activity() {
 
         content.addView(statusTitle, statusTitleParams)
 
-        addStatusCard(
+        val voiceoverCard = addStatusCard(
             content,
             "🎙",
             "Voiceover",
-            "Not generated"
+            project.voiceoverStatus
         )
+
+        voiceoverCard.setOnClickListener {
+            saveProject()
+
+            startActivity(
+                Intent(
+                    this,
+                    VoiceoverActivity::class.java
+                ).apply {
+                    putExtra("project_id", project.id)
+                }
+            )
+        }
 
         addStatusCard(
             content,
@@ -297,7 +310,7 @@ class ProjectWorkspaceActivity : Activity() {
         icon: String,
         title: String,
         status: String
-    ) {
+    ): LinearLayout {
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -359,6 +372,8 @@ class ProjectWorkspaceActivity : Activity() {
                 topMargin = dp(9)
             }
         )
+
+        return card
     }
 
     private fun saveProject() {
