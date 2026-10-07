@@ -51,17 +51,16 @@ class VoiceoverActivity : Activity() {
     private var playingPath: String? = null
 
     private val femaleVoices = listOf(
-        "nova", "shimmer", "coral", "rachel", "domi",
-        "bella", "elli", "charlotte", "dorothy", "sarah",
-        "emily", "lily", "matilda"
-    )
+    "nova",
+    "shimmer"
+)
 
-    private val maleVoices = listOf(
-        "alloy", "echo", "fable", "onyx", "sage",
-        "verse", "adam", "antoni", "arnold", "josh",
-        "sam", "daniel", "charlie", "james", "fin",
-        "callum", "liam", "george", "brian", "bill"
-    )
+private val maleVoices = listOf(
+    "echo",
+    "onyx",
+    "fable",
+    "alloy"
+)
 
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density).toInt()
@@ -797,9 +796,9 @@ class VoiceoverActivity : Activity() {
 
         val play = tv(
             if (playingPath == sample.path)
-                "⏸  Pause"
+                "Pause"
             else
-                "▶  Play",
+                "Play",
             14f,
             Color.WHITE,
             true
@@ -824,7 +823,7 @@ class VoiceoverActivity : Activity() {
         )
 
         val download = tv(
-            "↓  Download",
+            "Download",
             14f,
             Color.WHITE,
             true

@@ -1,6 +1,7 @@
 import json
 import re
 import urllib.request
+import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
@@ -15,6 +16,15 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_MODELS = {
     "openai/tts-1",
     "openai/tts-1-hd",
+}
+
+ALLOWED_VOICES = {
+    "nova",
+    "shimmer",
+    "echo",
+    "onyx",
+    "fable",
+    "alloy",
 }
 
 
@@ -48,7 +58,6 @@ class VoiceoverHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-
         if self.path == "/health":
             self.send_json(200, {
                 "ok": True,
@@ -93,7 +102,6 @@ class VoiceoverHandler(BaseHTTPRequestHandler):
         })
 
     def do_POST(self):
-
         if self.path != "/voiceover":
             self.send_json(404, {
                 "ok": False,
@@ -109,7 +117,9 @@ class VoiceoverHandler(BaseHTTPRequestHandler):
             text = str(data.get("text", "")).strip()
             voice = str(data.get("voice", "nova")).strip() or "nova"
             model = str(data.get("model", "openai/tts-1")).strip()
-            project_id = str(data.get("project_id", "default")).strip() or "default"
+            project_id = str(
+                data.get("project_id", "default")
+            ).strip() or "default"
 
             if not text:
                 self.send_json(400, {
@@ -122,6 +132,16 @@ class VoiceoverHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {
                     "ok": False,
                     "error": "Text is too long. Maximum 12000 characters."
+                })
+                return
+
+            if voice not in ALLOWED_VOICES:
+                self.send_json(400, {
+                    "ok": False,
+                    "error": (
+                        f"Unsupported voice: {voice}. "
+                        "Available voices: nova, shimmer, echo, onyx, fable, alloy"
+                    )
                 })
                 return
 
@@ -148,10 +168,50 @@ class VoiceoverHandler(BaseHTTPRequestHandler):
                 method="POST"
             )
 
-            with urllib.request.urlopen(request, timeout=600) as response:
-                audio = response.read()
+            try:
+                with urllib.request.urlopen(
+                    request,
+                    timeout=600
+                ) as response:
+                    audio = response.read()
 
-            filename = safe_name(project_id, "default") + ".mp3"
+            except urllib.error.HTTPError as error:
+                error_body = error.read().decode(
+                    "utf-8",
+                    errors="replace"
+                )
+
+                message = f"Pollinations API error ({error.code})"
+
+                try:
+                    error_json = json.loads(error_body)
+
+                    message = (
+                        error_json.get("error", {}).get("message")
+                        or error_json.get("message")
+                        or message
+                    )
+
+                except Exception:
+                    if error_body.strip():
+                        message = error_body.strip()
+
+                print(
+                    f"[voiceover] Pollinations HTTP {error.code}: "
+                    f"{message}"
+                )
+
+                self.send_json(error.code, {
+                    "ok": False,
+                    "error": message
+                })
+                return
+
+            filename = safe_name(
+                project_id,
+                "default"
+            ) + ".mp3"
+
             output_path = OUTPUT_DIR / filename
             output_path.write_bytes(audio)
 
@@ -179,5 +239,9 @@ if __name__ == "__main__":
     print(f"Voiceover server: http://{HOST}:{PORT}")
     print("Press Ctrl+C to stop.")
 
-    server = ThreadingHTTPServer((HOST, PORT), VoiceoverHandler)
+    server = ThreadingHTTPServer(
+        (HOST, PORT),
+        VoiceoverHandler
+    )
+
     server.serve_forever()
