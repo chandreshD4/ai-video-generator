@@ -1,6 +1,5 @@
 package com.aivideogenerator
 
-import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
 
@@ -24,15 +23,23 @@ object ThemeManager {
     }
 
     fun apply(context: Context) {
-        val manager =
-            context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        val dark = isDarkMode(context)
 
-        manager.setApplicationNightMode(
-            if (isDarkMode(context)) {
+        val configuration = Configuration(
+            context.resources.configuration
+        )
+
+        configuration.uiMode =
+            (configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+            if (dark) {
                 Configuration.UI_MODE_NIGHT_YES
             } else {
                 Configuration.UI_MODE_NIGHT_NO
             }
+
+        context.resources.updateConfiguration(
+            configuration,
+            context.resources.displayMetrics
         )
     }
 }
