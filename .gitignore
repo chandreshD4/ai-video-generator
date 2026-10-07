@@ -1,0 +1,13 @@
+
+# Local Gradle files
+.gradle/
+build/
+**/build/
+
+# Python cache/output
+backend/voiceover/__pycache__/
+backend/voiceover/output/
+
+# Local UI backups
+*.backup
+*.backup-ui

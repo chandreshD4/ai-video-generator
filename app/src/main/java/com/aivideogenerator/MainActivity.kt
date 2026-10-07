@@ -205,6 +205,7 @@ class MainActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
         store = ProjectStore(this)
@@ -579,6 +580,24 @@ class MainActivity : Activity() {
                 1f
             )
         )
+
+        settings.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    SettingsActivity::class.java
+                )
+            )
+        }
+
+        settingsNav.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    SettingsActivity::class.java
+                )
+            )
+        }
 
         bottom.addView(
             settingsNav,

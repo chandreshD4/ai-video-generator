@@ -1,20 +1,33 @@
 package com.aivideogenerator
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.text.method.ScrollingMovementMethod
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+
+data class VoiceSample(
+    val path: String,
+    val voice: String,
+    val model: String,
+    val createdAt: Long
+)
 
 class VoiceoverActivity : Activity() {
 
@@ -26,69 +39,45 @@ class VoiceoverActivity : Activity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
     private lateinit var generateButton: TextView
-    private lateinit var playButton: TextView
+    private lateinit var selectedVoiceText: TextView
+    private lateinit var selectedModelText: TextView
+    private lateinit var samplesContainer: LinearLayout
 
     private var selectedVoice = "nova"
     private var selectedModel = "openai/tts-1"
+
     private var mediaPlayer: MediaPlayer? = null
+    private var playingPath: String? = null
 
     private val femaleVoices = listOf(
-        "nova",
-        "shimmer",
-        "coral",
-        "rachel",
-        "domi",
-        "bella",
-        "elli",
-        "charlotte",
-        "dorothy",
-        "sarah",
-        "emily",
-        "lily",
-        "matilda"
+        "nova", "shimmer", "coral", "rachel", "domi",
+        "bella", "elli", "charlotte", "dorothy", "sarah",
+        "emily", "lily", "matilda"
     )
 
     private val maleVoices = listOf(
-        "alloy",
-        "echo",
-        "fable",
-        "onyx",
-        "sage",
-        "verse",
-        "adam",
-        "antoni",
-        "arnold",
-        "josh",
-        "sam",
-        "daniel",
-        "charlie",
-        "james",
-        "fin",
-        "callum",
-        "liam",
-        "george",
-        "brian",
-        "bill"
+        "alloy", "echo", "fable", "onyx", "sage",
+        "verse", "adam", "antoni", "arnold", "josh",
+        "sam", "daniel", "charlie", "james", "fin",
+        "callum", "liam", "george", "brian", "bill"
     )
 
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density).toInt()
 
-    private fun background(
+    private fun bg(
         color: Int,
         radius: Int = 16,
-        strokeColor: Int = Color.TRANSPARENT
-    ): GradientDrawable =
-        GradientDrawable().apply {
-            setColor(color)
-            cornerRadius = dp(radius).toFloat()
-
-            if (strokeColor != Color.TRANSPARENT) {
-                setStroke(dp(1), strokeColor)
-            }
+        stroke: Int = Color.TRANSPARENT
+    ) = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = dp(radius).toFloat()
+        if (stroke != Color.TRANSPARENT) {
+            setStroke(dp(1), stroke)
         }
+    }
 
-    private fun text(
+    private fun tv(
         value: String,
         size: Float,
         color: Int,
@@ -97,20 +86,16 @@ class VoiceoverActivity : Activity() {
         text = value
         textSize = size
         setTextColor(color)
-
-        if (bold) {
-            typeface = Typeface.DEFAULT_BOLD
-        }
+        if (bold) typeface = Typeface.DEFAULT_BOLD
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
         store = ProjectStore(this)
 
-        val projectId = intent.getStringExtra("project_id")
-
-        if (projectId == null) {
+        val projectId = intent.getStringExtra("project_id") ?: run {
             finish()
             return
         }
@@ -139,28 +124,18 @@ class VoiceoverActivity : Activity() {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(18), dp(18), dp(18), dp(14))
+            setPadding(dp(16), dp(16), dp(16), dp(12))
         }
 
-        val back = text("‹", 34f, Color.WHITE).apply {
+        val back = tv("‹", 34f, Color.WHITE).apply {
             gravity = Gravity.CENTER
             setOnClickListener { finish() }
         }
 
-        header.addView(
-            back,
-            LinearLayout.LayoutParams(dp(45), dp(48))
-        )
-
-        val title = text(
-            "Voiceover Generator",
-            20f,
-            Color.WHITE,
-            true
-        )
+        header.addView(back, LinearLayout.LayoutParams(dp(45), dp(48)))
 
         header.addView(
-            title,
+            tv("Voiceover Generator", 20f, Color.WHITE, true),
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -172,20 +147,18 @@ class VoiceoverActivity : Activity() {
 
         root.addView(header)
 
-        val scroll = ScrollView(this)
+        val outerScroll = ScrollView(this)
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(8), dp(20), dp(35))
+            setPadding(dp(20), dp(8), dp(20), dp(40))
         }
 
-        content.addView(
-            text(project.name, 24f, Color.WHITE, true)
-        )
+        content.addView(tv(project.name, 24f, Color.WHITE, true))
 
         content.addView(
-            text(
-                "Turn your script into natural AI narration.",
+            tv(
+                "Create natural AI narration and compare different voices.",
                 14f,
                 Color.rgb(155, 157, 170)
             ),
@@ -198,17 +171,12 @@ class VoiceoverActivity : Activity() {
         )
 
         content.addView(
-            text(
-                "SCRIPT",
-                11f,
-                Color.rgb(150, 120, 245),
-                true
-            ),
+            tv("SCRIPT", 11f, Color.rgb(150, 120, 245), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                topMargin = dp(25)
+                topMargin = dp(24)
             }
         )
 
@@ -217,15 +185,33 @@ class VoiceoverActivity : Activity() {
             textSize = 15f
             setTextColor(Color.WHITE)
             setHintTextColor(Color.rgb(105, 107, 120))
-            hint = "Your video script..."
+            hint = "Write or paste your video script..."
             gravity = Gravity.TOP
             minLines = 12
+            maxLines = 12
+            setSingleLine(false)
+            setHorizontallyScrolling(false)
+            movementMethod = ScrollingMovementMethod()
+            isVerticalScrollBarEnabled = true
             setPadding(dp(16), dp(16), dp(16), dp(16))
-            background = background(
+            background = bg(
                 Color.rgb(23, 24, 32),
                 16,
                 Color.rgb(43, 44, 56)
             )
+
+            setOnTouchListener { view, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN,
+                    MotionEvent.ACTION_MOVE ->
+                        view.parent?.requestDisallowInterceptTouchEvent(true)
+
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL ->
+                        view.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+                false
+            }
         }
 
         content.addView(
@@ -239,94 +225,84 @@ class VoiceoverActivity : Activity() {
         )
 
         content.addView(
-            text(
-                "VOICE",
-                11f,
-                Color.rgb(150, 120, 245),
-                true
-            ),
+            tv("GENERATED AUDIO", 11f, Color.rgb(150, 120, 245), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                topMargin = dp(22)
+                topMargin = dp(24)
             }
         )
 
-        val voiceContainer = LinearLayout(this).apply {
+        samplesContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), dp(8), dp(12), dp(8))
-            background = background(
-                Color.rgb(18, 19, 26),
-                15,
-                Color.rgb(42, 43, 54)
-            )
         }
 
-        addVoiceSection(
-            voiceContainer,
-            "Female Voices",
-            femaleVoices
-        )
+        content.addView(samplesContainer)
 
-        addVoiceSection(
-            voiceContainer,
-            "Male Voices",
-            maleVoices
-        )
+        renderSamples()
 
         content.addView(
-            voiceContainer,
+            tv("VOICE", 11f, Color.rgb(150, 120, 245), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(24)
+            }
+        )
+
+        val voiceCard = selectionCard(
+            "🎙",
+            "Voice",
+            selectedVoiceDisplay()
+        )
+
+        selectedVoiceText =
+            voiceCard.findViewWithTag("value") as TextView
+
+        voiceCard.setOnClickListener {
+            showVoiceSelector()
+        }
+
+        content.addView(
+            voiceCard,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(72)
             ).apply {
                 topMargin = dp(8)
             }
         )
 
         content.addView(
-            text(
-                "VOICE MODEL",
-                11f,
-                Color.rgb(150, 120, 245),
-                true
-            ),
+            tv("VOICE MODEL", 11f, Color.rgb(150, 120, 245), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                topMargin = dp(20)
+                topMargin = dp(18)
             }
         )
 
-        val modelContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), dp(8), dp(12), dp(8))
-            background = background(
-                Color.rgb(18, 19, 26),
-                15,
-                Color.rgb(42, 43, 54)
-            )
+        val modelCard = selectionCard(
+            "⚙",
+            "Voice Model",
+            modelDisplay()
+        )
+
+        selectedModelText =
+            modelCard.findViewWithTag("value") as TextView
+
+        modelCard.setOnClickListener {
+            showModelSelector()
         }
 
-        addModelOption(
-            modelContainer,
-            "openai/tts-1",
-            "Standard quality"
-        )
-
-        addModelOption(
-            modelContainer,
-            "openai/tts-1-hd",
-            "Higher quality"
-        )
-
         content.addView(
-            modelContainer,
+            modelCard,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                dp(72)
             ).apply {
                 topMargin = dp(8)
             }
@@ -335,22 +311,14 @@ class VoiceoverActivity : Activity() {
         val statusCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(15), dp(16), dp(15))
-            background = background(
-                Color.rgb(20, 21, 28),
-                15
-            )
+            background = bg(Color.rgb(20, 21, 28), 15)
         }
 
         statusCard.addView(
-            text(
-                "Generation Status",
-                14f,
-                Color.WHITE,
-                true
-            )
+            tv("Generation Status", 14f, Color.WHITE, true)
         )
 
-        statusText = text(
+        statusText = tv(
             project.voiceoverStatus,
             13f,
             Color.rgb(140, 142, 155)
@@ -372,7 +340,6 @@ class VoiceoverActivity : Activity() {
             android.R.attr.progressBarStyleHorizontal
         ).apply {
             max = 100
-            progress = 0
             visibility = View.GONE
         }
 
@@ -386,11 +353,7 @@ class VoiceoverActivity : Activity() {
             }
         )
 
-        progressText = text(
-            "",
-            12f,
-            Color.rgb(145, 147, 160)
-        )
+        progressText = tv("", 12f, Color.rgb(145, 147, 160))
 
         statusCard.addView(
             progressText,
@@ -412,21 +375,15 @@ class VoiceoverActivity : Activity() {
             }
         )
 
-        generateButton = text(
+        generateButton = tv(
             "Generate Voiceover",
             16f,
             Color.WHITE,
             true
         ).apply {
             gravity = Gravity.CENTER
-            background = background(
-                Color.rgb(105, 70, 205),
-                16
-            )
-
-            setOnClickListener {
-                generateVoiceover()
-            }
+            background = bg(Color.rgb(105, 70, 205), 16)
+            setOnClickListener { generateVoiceover() }
         }
 
         content.addView(
@@ -435,48 +392,13 @@ class VoiceoverActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 dp(56)
             ).apply {
-                topMargin = dp(22)
-            }
-        )
-
-        playButton = text(
-            "▶  Play Voiceover",
-            15f,
-            Color.WHITE,
-            true
-        ).apply {
-            gravity = Gravity.CENTER
-            background = background(
-                Color.rgb(35, 36, 46),
-                16,
-                Color.rgb(65, 66, 80)
-            )
-
-            visibility =
-                if (project.voiceoverPath.isNotBlank()) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
-                }
-
-            setOnClickListener {
-                playVoiceover()
-            }
-        }
-
-        content.addView(
-            playButton,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-            ).apply {
-                topMargin = dp(12)
+                topMargin = dp(20)
             }
         )
 
         content.addView(
-            text(
-                "API key stays outside the APK. Voice generation is handled through the secure bridge during testing.",
+            tv(
+                "API key stays outside the APK. Voice generation is handled through the secure testing bridge.",
                 12f,
                 Color.rgb(115, 117, 130)
             ).apply {
@@ -484,10 +406,10 @@ class VoiceoverActivity : Activity() {
             }
         )
 
-        scroll.addView(content)
+        outerScroll.addView(content)
 
         root.addView(
-            scroll,
+            outerScroll,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
@@ -498,238 +420,584 @@ class VoiceoverActivity : Activity() {
         setContentView(root)
     }
 
-    private fun addVoiceSection(
-        parent: LinearLayout,
+    private fun selectionCard(
+        icon: String,
         title: String,
-        voices: List<String>
-    ) {
+        value: String
+    ): LinearLayout {
 
-        parent.addView(
-            text(
-                title,
-                13f,
-                Color.WHITE,
-                true
-            ),
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = dp(6)
-                bottomMargin = dp(4)
-            }
-        )
-
-        voices.forEach { voice ->
-
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(4), dp(2), dp(4), dp(2))
-                background = background(
-                    Color.TRANSPARENT,
-                    10
-                )
-            }
-
-            val radio = RadioButton(this).apply {
-                isChecked = voice == selectedVoice
-                buttonTintList = null
-            }
-
-            val name = text(
-                voice.replaceFirstChar {
-                    it.uppercase()
-                },
-                15f,
-                Color.WHITE
-            )
-
-            row.addView(
-                radio,
-                LinearLayout.LayoutParams(
-                    dp(48),
-                    dp(48)
-                )
-            )
-
-            row.addView(
-                name,
-                LinearLayout.LayoutParams(
-                    0,
-                    dp(48),
-                    1f
-                ).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-            )
-
-            val click = {
-                selectedVoice = voice
-
-                updateAllVoiceRadioButtons(
-                    voice
-                )
-            }
-
-            radio.setOnClickListener {
-                click()
-            }
-
-            row.setOnClickListener {
-                click()
-            }
-
-            parent.addView(row)
-        }
-    }
-
-    private fun updateAllVoiceRadioButtons(
-        voice: String
-    ) {
-        selectedVoice = voice
-
-        val root = window.decorView
-
-        updateRadioButtons(
-            root,
-            voice
-        )
-    }
-
-    private fun updateRadioButtons(
-        view: View,
-        voice: String
-    ) {
-
-        if (view is LinearLayout) {
-
-            for (i in 0 until view.childCount) {
-
-                val child = view.getChildAt(i)
-
-                if (child is LinearLayout &&
-                    child.childCount > 0
-                ) {
-
-                    val radio =
-                        child.getChildAt(0)
-
-                    val nameView =
-                        if (child.childCount > 1)
-                            child.getChildAt(1)
-                        else null
-
-                    if (radio is RadioButton &&
-                        nameView is TextView
-                    ) {
-
-                        val rowVoice =
-                            nameView.text.toString()
-
-                        radio.isChecked =
-                            rowVoice.equals(
-                                voice,
-                                ignoreCase = true
-                            )
-                    }
-                }
-
-                updateRadioButtons(
-                    child,
-                    voice
-                )
-            }
-        }
-    }
-
-    private fun addModelOption(
-        parent: LinearLayout,
-        model: String,
-        description: String
-    ) {
-
-        val row = LinearLayout(this).apply {
+        val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(2), dp(4), dp(2))
+            setPadding(dp(14), dp(10), dp(14), dp(10))
+            background = bg(
+                Color.rgb(20, 21, 29),
+                15,
+                Color.rgb(48, 49, 62)
+            )
         }
 
-        val radio = RadioButton(this).apply {
-            isChecked = model == selectedModel
-        }
+        card.addView(
+            tv(icon, 23f, Color.WHITE).apply {
+                gravity = Gravity.CENTER
+            },
+            LinearLayout.LayoutParams(dp(44), dp(48))
+        )
 
         val labels = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        labels.addView(
-            text(
-                model,
-                14f,
-                Color.WHITE,
-                true
-            )
-        )
+        labels.addView(tv(title, 12f, Color.rgb(145, 147, 160)))
+
+        val valueView = tv(value, 15f, Color.WHITE, true)
+        valueView.tag = "value"
 
         labels.addView(
-            text(
-                description,
-                12f,
-                Color.rgb(135, 137, 150)
-            )
-        )
-
-        row.addView(
-            radio,
+            valueView,
             LinearLayout.LayoutParams(
-                dp(48),
-                dp(58)
-            )
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(3)
+            }
         )
 
-        row.addView(
+        card.addView(
             labels,
             LinearLayout.LayoutParams(
                 0,
-                dp(58),
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).apply {
+                leftMargin = dp(12)
+            }
+        )
+
+        card.addView(
+            tv("›", 28f, Color.rgb(145, 147, 160)).apply {
+                gravity = Gravity.CENTER
+            },
+            LinearLayout.LayoutParams(dp(35), dp(48))
+        )
+
+        return card
+    }
+
+    private fun selectedVoiceDisplay(): String =
+        selectedVoice.replaceFirstChar { it.uppercase() }
+
+    private fun modelDisplay(): String =
+        if (selectedModel.endsWith("-hd")) {
+            "HD • Higher quality"
+        } else {
+            "Standard • TTS-1"
+        }
+
+    private fun showVoiceSelector() {
+
+        val all = ArrayList<String>()
+        all.addAll(femaleVoices)
+        all.addAll(maleVoices)
+
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), dp(4), dp(10), dp(4))
+        }
+
+        val scroll = ScrollView(this)
+        scroll.addView(container)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Choose Voice")
+            .setView(scroll)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        all.forEach { voice ->
+
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(8), dp(4), dp(8), dp(4))
+            }
+
+            val radio = RadioButton(this).apply {
+                isChecked = voice == selectedVoice
+            }
+
+            val category =
+                if (femaleVoices.contains(voice))
+                    "Female"
+                else
+                    "Male"
+
+            val labels = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            labels.addView(
+                tv(
+                    voice.replaceFirstChar { it.uppercase() },
+                    15f,
+                    Color.WHITE,
+                    true
+                )
+            )
+
+            labels.addView(
+                tv(
+                    category,
+                    11f,
+                    Color.rgb(145, 147, 160)
+                )
+            )
+
+            row.addView(
+                radio,
+                LinearLayout.LayoutParams(dp(48), dp(56))
+            )
+
+            row.addView(
+                labels,
+                LinearLayout.LayoutParams(
+                    0,
+                    dp(56),
+                    1f
+                )
+            )
+
+            val choose = {
+                selectedVoice = voice
+                selectedVoiceText.text = selectedVoiceDisplay()
+                dialog.dismiss()
+            }
+
+            radio.setOnClickListener { choose() }
+            row.setOnClickListener { choose() }
+
+            container.addView(row)
+        }
+
+        dialog.show()
+    }
+
+    private fun showModelSelector() {
+
+        val choices = arrayOf(
+            "openai/tts-1",
+            "openai/tts-1-hd"
+        )
+
+        val descriptions = arrayOf(
+            "Standard quality",
+            "Higher quality"
+        )
+
+        val checked =
+            if (selectedModel == choices[1]) 1 else 0
+
+        AlertDialog.Builder(this)
+            .setTitle("Choose Voice Model")
+            .setSingleChoiceItems(
+                choices.mapIndexed { index, value ->
+                    "${value}  •  ${descriptions[index]}"
+                }.toTypedArray(),
+                checked
+            ) { dialog, which ->
+                selectedModel = choices[which]
+                selectedModelText.text = modelDisplay()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun historyPrefs() =
+        getSharedPreferences(
+            "voiceover_samples",
+            MODE_PRIVATE
+        )
+
+    private fun getSamples(): MutableList<VoiceSample> {
+
+        val result = mutableListOf<VoiceSample>()
+
+        val raw = historyPrefs().getString(
+            project.id,
+            "[]"
+        ) ?: "[]"
+
+        try {
+            val array = JSONArray(raw)
+
+            for (i in 0 until array.length()) {
+                val item = array.getJSONObject(i)
+
+                result.add(
+                    VoiceSample(
+                        item.getString("path"),
+                        item.getString("voice"),
+                        item.getString("model"),
+                        item.getLong("createdAt")
+                    )
+                )
+            }
+        } catch (_: Exception) {
+        }
+
+        return result
+    }
+
+    private fun saveSample(sample: VoiceSample) {
+
+        val samples = getSamples()
+        samples.add(0, sample)
+
+        val array = JSONArray()
+
+        samples.forEach {
+            array.put(
+                JSONObject().apply {
+                    put("path", it.path)
+                    put("voice", it.voice)
+                    put("model", it.model)
+                    put("createdAt", it.createdAt)
+                }
+            )
+        }
+
+        historyPrefs()
+            .edit()
+            .putString(project.id, array.toString())
+            .apply()
+    }
+
+    private fun renderSamples() {
+
+        samplesContainer.removeAllViews()
+
+        val samples = getSamples()
+
+        if (samples.isEmpty() &&
+            project.voiceoverPath.isNotBlank()
+        ) {
+            samples.add(
+                VoiceSample(
+                    project.voiceoverPath,
+                    selectedVoice,
+                    selectedModel,
+                    project.updatedAt
+                )
+            )
+        }
+
+        if (samples.isEmpty()) {
+
+            val empty = tv(
+                "Generated voice samples will appear here.",
+                13f,
+                Color.rgb(120, 122, 135)
+            )
+
+            empty.setPadding(
+                dp(14),
+                dp(15),
+                dp(14),
+                dp(15)
+            )
+
+            samplesContainer.addView(
+                empty,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(58)
+                )
+            )
+
+            return
+        }
+
+        samples.forEach { sample ->
+            addSampleCard(sample)
+        }
+    }
+
+    private fun addSampleCard(sample: VoiceSample) {
+
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(15), dp(13), dp(15), dp(13))
+            background = bg(
+                Color.rgb(20, 21, 29),
+                15,
+                Color.rgb(45, 46, 59)
+            )
+        }
+
+        val top = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val voice = tv(
+            sample.voice.replaceFirstChar { it.uppercase() },
+            16f,
+            Color.WHITE,
+            true
+        )
+
+        top.addView(
+            voice,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 1f
             )
         )
 
-        val select = {
-            selectedModel = model
+        val modelShort =
+            if (sample.model.endsWith("-hd"))
+                "TTS-1 HD"
+            else
+                "TTS-1"
 
-            for (i in 0 until parent.childCount) {
-                val child = parent.getChildAt(i)
+        top.addView(
+            tv(
+                modelShort,
+                11f,
+                Color.rgb(160, 140, 235),
+                true
+            )
+        )
 
-                if (child is LinearLayout &&
-                    child.childCount > 0
-                ) {
-                    val r = child.getChildAt(0)
+        card.addView(top)
 
-                    if (r is RadioButton) {
-                        val selected =
-                            child.getTag() == model
+        card.addView(
+            tv(
+                sample.model,
+                11f,
+                Color.rgb(125, 127, 140)
+            ),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(3)
+            }
+        )
 
-                        r.isChecked = selected
-                    }
-                }
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val play = tv(
+            if (playingPath == sample.path)
+                "⏸  Pause"
+            else
+                "▶  Play",
+            14f,
+            Color.WHITE,
+            true
+        ).apply {
+            gravity = Gravity.CENTER
+            background = bg(Color.rgb(45, 46, 58), 12)
+            setOnClickListener {
+                playSample(sample)
             }
         }
 
-        row.tag = model
+        actions.addView(
+            play,
+            LinearLayout.LayoutParams(
+                0,
+                dp(46),
+                1f
+            ).apply {
+                rightMargin = dp(8)
+                topMargin = dp(12)
+            }
+        )
 
-        radio.setOnClickListener {
-            select()
+        val download = tv(
+            "↓  Download",
+            14f,
+            Color.WHITE,
+            true
+        ).apply {
+            gravity = Gravity.CENTER
+            background = bg(Color.rgb(105, 70, 205), 12)
+            setOnClickListener {
+                downloadSample(sample)
+            }
         }
 
-        row.setOnClickListener {
-            select()
+        actions.addView(
+            download,
+            LinearLayout.LayoutParams(
+                0,
+                dp(46),
+                1f
+            ).apply {
+                topMargin = dp(12)
+            }
+        )
+
+        card.addView(actions)
+
+        samplesContainer.addView(
+            card,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(9)
+            }
+        )
+    }
+
+    private fun playSample(sample: VoiceSample) {
+
+        val file = File(sample.path)
+
+        if (!file.exists()) {
+            Toast.makeText(
+                this,
+                "Audio file not found",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
         }
 
-        parent.addView(row)
+        if (playingPath == sample.path) {
+            mediaPlayer?.let {
+                if (it.isPlaying) {
+                    it.pause()
+                } else {
+                    it.start()
+                }
+            }
+
+            renderSamples()
+            return
+        }
+
+        mediaPlayer?.release()
+
+        try {
+
+            mediaPlayer = MediaPlayer().apply {
+
+                setDataSource(file.absolutePath)
+
+                setOnPreparedListener {
+                    start()
+                    playingPath = sample.path
+                    renderSamples()
+                }
+
+                setOnCompletionListener {
+                    playingPath = null
+                    renderSamples()
+                }
+
+                prepareAsync()
+            }
+
+        } catch (error: Exception) {
+
+            playingPath = null
+
+            Toast.makeText(
+                this,
+                "Playback failed: ${error.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun downloadSample(sample: VoiceSample) {
+
+        val file = File(sample.path)
+
+        if (!file.exists()) {
+            Toast.makeText(
+                this,
+                "Audio file not found",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        val name =
+            "voice_${sample.voice}_${System.currentTimeMillis()}.mp3"
+
+        val intent = Intent(
+            Intent.ACTION_CREATE_DOCUMENT
+        ).apply {
+            type = "audio/mpeg"
+            putExtra(
+                Intent.EXTRA_TITLE,
+                name
+            )
+        }
+
+        pendingDownloadFile = file
+        startActivityForResult(
+            intent,
+            REQUEST_SAVE_AUDIO
+        )
+    }
+
+    private var pendingDownloadFile: File? = null
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (requestCode != REQUEST_SAVE_AUDIO ||
+            resultCode != RESULT_OK
+        ) {
+            return
+        }
+
+        val source = pendingDownloadFile ?: return
+        val uri = data?.data ?: return
+
+        try {
+
+            contentResolver.openOutputStream(uri)
+                ?.use { output ->
+
+                    source.inputStream().use { input ->
+                        input.copyTo(output)
+                    }
+                }
+
+            Toast.makeText(
+                this,
+                "Audio saved successfully",
+                Toast.LENGTH_SHORT
+            ).show()
+
+        } catch (error: Exception) {
+
+            Toast.makeText(
+                this,
+                "Download failed: ${error.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun generateVoiceover() {
@@ -742,8 +1010,7 @@ class VoiceoverActivity : Activity() {
         }
 
         if (script.length > 12000) {
-            scriptInput.error =
-                "Maximum 12000 characters"
+            scriptInput.error = "Maximum 12000 characters"
             return
         }
 
@@ -765,7 +1032,6 @@ class VoiceoverActivity : Activity() {
 
         generateButton.text = "Generating..."
         generateButton.isEnabled = false
-        playButton.visibility = View.GONE
 
         Thread {
 
@@ -830,14 +1096,9 @@ class VoiceoverActivity : Activity() {
                     )
                 }
 
-                val result =
-                    JSONObject(response)
+                val result = JSONObject(response)
 
-                if (!result.optBoolean(
-                        "ok",
-                        false
-                    )
-                ) {
+                if (!result.optBoolean("ok", false)) {
                     throw Exception(
                         result.optString(
                             "error",
@@ -847,18 +1108,13 @@ class VoiceoverActivity : Activity() {
                 }
 
                 val filename =
-                    result.getString(
-                        "filename"
-                    )
+                    result.getString("filename")
 
                 runOnUiThread {
-
                     statusText.text =
                         "Audio generated. Downloading..."
 
-                    progressBar.isIndeterminate =
-                        false
-
+                    progressBar.isIndeterminate = false
                     progressBar.progress = 0
 
                     progressText.text =
@@ -866,10 +1122,7 @@ class VoiceoverActivity : Activity() {
                 }
 
                 val encodedFilename =
-                    URLEncoder.encode(
-                        filename,
-                        "UTF-8"
-                    )
+                    URLEncoder.encode(filename, "UTF-8")
 
                 val audioConnection =
                     URL(
@@ -877,14 +1130,9 @@ class VoiceoverActivity : Activity() {
                     ).openConnection()
                             as HttpURLConnection
 
-                audioConnection.requestMethod =
-                    "GET"
-
-                audioConnection.connectTimeout =
-                    15000
-
-                audioConnection.readTimeout =
-                    120000
+                audioConnection.requestMethod = "GET"
+                audioConnection.connectTimeout = 15000
+                audioConnection.readTimeout = 120000
 
                 if (audioConnection.responseCode !in 200..299) {
                     throw Exception(
@@ -893,14 +1141,10 @@ class VoiceoverActivity : Activity() {
                 }
 
                 val total =
-                    audioConnection
-                        .contentLengthLong
+                    audioConnection.contentLengthLong
 
                 val voiceoverDir =
-                    File(
-                        filesDir,
-                        "voiceovers"
-                    )
+                    File(filesDir, "voiceovers")
 
                 if (!voiceoverDir.exists()) {
                     voiceoverDir.mkdirs()
@@ -909,28 +1153,22 @@ class VoiceoverActivity : Activity() {
                 val localFile =
                     File(
                         voiceoverDir,
-                        "${project.id}.mp3"
+                        "${project.id}_${System.currentTimeMillis()}.mp3"
                     )
 
                 var downloaded = 0L
 
                 audioConnection.inputStream.use { input ->
 
-                    FileOutputStream(
-                        localFile
-                    ).use { output ->
+                    FileOutputStream(localFile).use { output ->
 
-                        val buffer =
-                            ByteArray(8192)
+                        val buffer = ByteArray(8192)
 
                         while (true) {
 
-                            val count =
-                                input.read(buffer)
+                            val count = input.read(buffer)
 
-                            if (count == -1) {
-                                break
-                            }
+                            if (count == -1) break
 
                             output.write(
                                 buffer,
@@ -944,9 +1182,7 @@ class VoiceoverActivity : Activity() {
 
                                 val percent =
                                     (
-                                        downloaded *
-                                            100 /
-                                            total
+                                        downloaded * 100 / total
                                     ).toInt()
 
                                 runOnUiThread {
@@ -963,6 +1199,15 @@ class VoiceoverActivity : Activity() {
                 }
 
                 audioConnection.disconnect()
+
+                val sample = VoiceSample(
+                    localFile.absolutePath,
+                    selectedVoice,
+                    selectedModel,
+                    System.currentTimeMillis()
+                )
+
+                saveSample(sample)
 
                 project = project.copy(
                     voiceoverPath =
@@ -983,22 +1228,18 @@ class VoiceoverActivity : Activity() {
                         "Voiceover generated successfully."
 
                     progressText.text =
-                        "Completed • ${
-                            localFile.length() / 1024
-                        } KB"
+                        "Completed • ${localFile.length() / 1024} KB"
 
                     generateButton.text =
-                        "Generate Again"
+                        "Generate Another Voice"
 
-                    generateButton.isEnabled =
-                        true
+                    generateButton.isEnabled = true
 
-                    playButton.visibility =
-                        View.VISIBLE
+                    renderSamples()
 
                     Toast.makeText(
                         this,
-                        "Voiceover generated successfully",
+                        "New voice sample added",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -1006,103 +1247,28 @@ class VoiceoverActivity : Activity() {
             } catch (error: Exception) {
 
                 project = project.copy(
-                    voiceoverStatus =
-                        "Generation failed",
-                    updatedAt =
-                        System.currentTimeMillis()
+                    voiceoverStatus = "Generation failed",
+                    updatedAt = System.currentTimeMillis()
                 )
 
                 store.saveProject(project)
 
                 runOnUiThread {
 
-                    progressBar.visibility =
-                        View.GONE
-
+                    progressBar.visibility = View.GONE
                     progressText.text = ""
 
                     statusText.text =
-                        "Error: ${
-                            error.message
-                                ?: "Unknown error"
-                        }"
+                        "Error: ${error.message ?: "Unknown error"}"
 
-                    generateButton.text =
-                        "Try Again"
-
-                    generateButton.isEnabled =
-                        true
-
-                    Toast.makeText(
-                        this,
-                        "Voiceover generation failed",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    generateButton.text = "Try Again"
+                    generateButton.isEnabled = true
                 }
             }
         }.start()
     }
 
-    private fun playVoiceover() {
-
-        val path =
-            project.voiceoverPath
-
-        if (path.isBlank()) {
-            Toast.makeText(
-                this,
-                "No voiceover available",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        val file = File(path)
-
-        if (!file.exists()) {
-            Toast.makeText(
-                this,
-                "Voiceover file not found",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        try {
-
-            mediaPlayer?.release()
-
-            mediaPlayer =
-                MediaPlayer().apply {
-
-                    setDataSource(
-                        file.absolutePath
-                    )
-
-                    setOnPreparedListener {
-                        start()
-
-                        playButton.text =
-                            "⏸  Playing Voiceover"
-                    }
-
-                    setOnCompletionListener {
-                        playButton.text =
-                            "▶  Play Voiceover"
-                    }
-
-                    prepareAsync()
-                }
-
-        } catch (error: Exception) {
-
-            Toast.makeText(
-                this,
-                "Playback failed: ${
-                    error.message
-                }",
-                Toast.LENGTH_LONG
-            ).show()
-        }
+    companion object {
+        private const val REQUEST_SAVE_AUDIO = 5001
     }
 }

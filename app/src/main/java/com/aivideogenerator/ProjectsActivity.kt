@@ -46,6 +46,7 @@ class ProjectsActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
         store = ProjectStore(this)
