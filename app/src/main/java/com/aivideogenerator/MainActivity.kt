@@ -1,6 +1,9 @@
 package com.aivideogenerator
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -205,14 +208,19 @@ class MainActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
-        store = ProjectStore(this)
+        val previousCrash = CrashLogger.consume(this)
 
+        if (!previousCrash.isNullOrBlank()) {
+            showCrashReport(previousCrash)
+            return
+        }
+
+        ThemeManager.apply(this)
+        store = ProjectStore(this)
         window.statusBarColor = Color.rgb(10, 10, 15)
         window.navigationBarColor = Color.rgb(10, 10, 15)
-
         buildHome()
     }
 
@@ -222,6 +230,38 @@ class MainActivity : Activity() {
         if (::content.isInitialized) {
             buildHome()
         }
+    }
+
+    private fun showCrashReport(error: String) {
+        val scroll = ScrollView(this)
+
+        val message = TextView(this).apply {
+            text = error
+            textSize = 12f
+            setTextIsSelectable(true)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+        }
+
+        scroll.addView(message)
+
+        AlertDialog.Builder(this)
+            .setTitle("Previous App Crash")
+            .setMessage("App पिछली बार crash हुई थी। नीचे पूरा error है।")
+            .setView(scroll)
+            .setNegativeButton("Close", null)
+            .setPositiveButton("Copy Error") { _, _ ->
+                val clipboard =
+                    getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+
+                clipboard.setPrimaryClip(
+                    ClipData.newPlainText(
+                        "AI Video Generator Crash",
+                        error
+                    )
+                )
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun buildHome() {

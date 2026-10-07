@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".AIVideoGeneratorApp"
         android:allowBackup="true"
         android:label="AI Video Generator"
         android:supportsRtl="true"
