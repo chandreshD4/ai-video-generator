@@ -157,4 +157,58 @@ object ThemeManager {
             Color.rgb(245, 245, 248)
         }
     }
+
+    // Home / feature semantic colors
+    fun red(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(239, 83, 80)
+        else Color.rgb(211, 47, 47)
+    }
+
+    fun saffron(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(255, 179, 0)
+        else Color.rgb(199, 120, 0)
+    }
+
+    fun blue(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(66, 165, 245)
+        else Color.rgb(21, 101, 192)
+    }
+
+    fun green(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(102, 187, 106)
+        else Color.rgb(46, 125, 50)
+    }
+
+    fun cyan(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(41, 182, 246)
+        else Color.rgb(2, 119, 189)
+    }
+
+    // Primary Home action:
+    // Dark mode -> blue
+    // Light mode -> red
+    fun primaryAction(context: Context): Int {
+        return if (isDarkMode(context)) blue(context)
+        else red(context)
+    }
+
+    fun homeHeroStart(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(53, 36, 105)
+        else Color.rgb(47, 85, 165)
+    }
+
+    fun homeHeroEnd(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(30, 65, 110)
+        else Color.rgb(18, 125, 190)
+    }
+
+    fun navSelected(context: Context): Int {
+        return if (isDarkMode(context)) Color.rgb(144, 202, 249)
+        else Color.rgb(21, 101, 192)
+    }
+
+    fun navUnselected(context: Context): Int {
+        return subtleText(context)
+    }
+
 }
