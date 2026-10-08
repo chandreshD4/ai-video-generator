@@ -158,6 +158,68 @@ object ThemeManager {
         }
     }
 
+    // Semantic UI colors
+    // Keep these centralized so every screen can adapt safely
+    // between Light and Dark mode.
+
+    fun buttonText(context: Context): Int {
+        // Colored buttons use white text in both modes.
+        return Color.WHITE
+    }
+
+    fun inputText(context: Context): Int {
+        return primaryText(context)
+    }
+
+    fun placeholderText(context: Context): Int {
+        return hintText(context)
+    }
+
+    fun disabledText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(90, 92, 104)
+        } else {
+            Color.rgb(155, 155, 165)
+        }
+    }
+
+    fun iconColor(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(220, 220, 230)
+        } else {
+            Color.rgb(45, 45, 55)
+        }
+    }
+
+    fun heroText(context: Context): Int {
+        // Hero has a colored background, so white remains readable.
+        return Color.WHITE
+    }
+
+    fun heroSecondaryText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(220, 220, 232)
+        } else {
+            Color.WHITE
+        }
+    }
+
+    fun buttonSecondary(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(43, 44, 56)
+        } else {
+            Color.rgb(235, 235, 241)
+        }
+    }
+
+    fun buttonSecondaryText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.WHITE
+        } else {
+            Color.rgb(35, 35, 45)
+        }
+    }
+
     // Home / feature semantic colors
     fun red(context: Context): Int {
         return if (isDarkMode(context)) Color.rgb(239, 83, 80)

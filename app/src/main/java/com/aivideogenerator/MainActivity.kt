@@ -104,7 +104,7 @@ class MainActivity : Activity() {
             text = icon
             textSize = if (large) 28f else 24f
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+            setTextColor(ThemeManager.buttonText(this@MainActivity))
             background = roundedBackground(accent, 14f)
         }
 
@@ -119,7 +119,7 @@ class MainActivity : Activity() {
         val titleView = label(
             title,
             if (large) 20f else 17f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@MainActivity),
             true
         )
 
@@ -333,7 +333,7 @@ class MainActivity : Activity() {
             label(
                 "Create something\namazing.",
                 29f,
-                Color.WHITE,
+                ThemeManager.primaryText(this@MainActivity),
                 true
             ),
             LinearLayout.LayoutParams(
@@ -357,7 +357,7 @@ class MainActivity : Activity() {
             text = "⚙"
             textSize = 25f
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+            setTextColor(ThemeManager.iconColor(this@MainActivity))
 
             background = roundedBackground(
                 ThemeManager.surfaceAlt(this@MainActivity),
@@ -398,7 +398,7 @@ class MainActivity : Activity() {
             label(
                 "Turn your ideas\ninto videos",
                 23f,
-                Color.WHITE,
+                ThemeManager.heroText(this@MainActivity),
                 true
             )
         )
@@ -420,7 +420,7 @@ class MainActivity : Activity() {
         val startButton = label(
             "＋  New Project",
             14f,
-            Color.WHITE,
+            ThemeManager.buttonText(this@MainActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
@@ -825,7 +825,7 @@ class MainActivity : Activity() {
             val icon = label(
                 "🎬",
                 20f,
-                Color.WHITE
+                ThemeManager.buttonText(this@MainActivity)
             )
             icon.gravity = Gravity.CENTER
             icon.background = roundedBackground(
@@ -849,7 +849,7 @@ class MainActivity : Activity() {
                 label(
                     project.name,
                     15f,
-                    Color.WHITE,
+                    ThemeManager.primaryText(this@MainActivity),
                     true
                 )
             )
