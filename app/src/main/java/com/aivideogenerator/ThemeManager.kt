@@ -2,6 +2,7 @@ package com.aivideogenerator
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
 
 object ThemeManager {
 
@@ -25,21 +26,50 @@ object ThemeManager {
     fun apply(context: Context) {
         val dark = isDarkMode(context)
 
-        val configuration = Configuration(
-            context.resources.configuration
-        )
-
+        val configuration = Configuration(context.resources.configuration)
         configuration.uiMode =
             (configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
-            if (dark) {
-                Configuration.UI_MODE_NIGHT_YES
-            } else {
-                Configuration.UI_MODE_NIGHT_NO
-            }
+                if (dark) {
+                    Configuration.UI_MODE_NIGHT_YES
+                } else {
+                    Configuration.UI_MODE_NIGHT_NO
+                }
 
         context.resources.updateConfiguration(
             configuration,
             context.resources.displayMetrics
         )
+    }
+
+    fun background(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(11, 11, 16)
+        } else {
+            Color.rgb(248, 248, 250)
+        }
+    }
+
+    fun card(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(25, 25, 32)
+        } else {
+            Color.WHITE
+        }
+    }
+
+    fun primaryText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.WHITE
+        } else {
+            Color.rgb(20, 20, 24)
+        }
+    }
+
+    fun secondaryText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.LTGRAY
+        } else {
+            Color.rgb(90, 90, 98)
+        }
     }
 }

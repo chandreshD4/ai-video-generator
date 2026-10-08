@@ -4,7 +4,6 @@ import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
@@ -22,9 +21,13 @@ class SettingsActivity : Activity() {
         return TextView(this).apply {
             text = value
             textSize = size
-            setTextColor(Color.WHITE)
+            setTextColor(ThemeManager.primaryText(this@SettingsActivity))
+
             if (bold) {
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTypeface(
+                    typeface,
+                    android.graphics.Typeface.BOLD
+                )
             }
         }
     }
@@ -33,7 +36,9 @@ class SettingsActivity : Activity() {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(16), dp(18), dp(16))
-            setBackgroundColor(Color.rgb(25, 25, 32))
+            setBackgroundColor(
+                ThemeManager.card(this@SettingsActivity)
+            )
         }
     }
 
@@ -45,7 +50,9 @@ class SettingsActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(20), dp(18), dp(20))
-            setBackgroundColor(Color.rgb(11, 11, 16))
+            setBackgroundColor(
+                ThemeManager.background(this@SettingsActivity)
+            )
         }
 
         val header = LinearLayout(this).apply {
@@ -55,9 +62,14 @@ class SettingsActivity : Activity() {
         val back = TextView(this).apply {
             text = "‹"
             textSize = 38f
-            setTextColor(Color.WHITE)
+            setTextColor(
+                ThemeManager.primaryText(this@SettingsActivity)
+            )
             setPadding(0, 0, dp(18), 0)
-            setOnClickListener { finish() }
+
+            setOnClickListener {
+                finish()
+            }
         }
 
         header.addView(
@@ -86,7 +98,10 @@ class SettingsActivity : Activity() {
             "Choose how the AI Video Generator looks.",
             14f
         )
-        description.setTextColor(Color.LTGRAY)
+
+        description.setTextColor(
+            ThemeManager.secondaryText(this)
+        )
 
         appearanceCard.addView(
             description,
@@ -115,7 +130,10 @@ class SettingsActivity : Activity() {
             "Use the dark interface throughout the app.",
             13f
         )
-        modeDescription.setTextColor(Color.LTGRAY)
+
+        modeDescription.setTextColor(
+            ThemeManager.secondaryText(this)
+        )
 
         darkText.addView(modeDescription)
 
@@ -129,12 +147,16 @@ class SettingsActivity : Activity() {
         )
 
         val darkSwitch = Switch(this).apply {
-            isChecked = ThemeManager.isDarkMode(this@SettingsActivity)
+            isChecked = ThemeManager.isDarkMode(
+                this@SettingsActivity
+            )
+
             setOnCheckedChangeListener { _, checked ->
                 ThemeManager.setDarkMode(
                     this@SettingsActivity,
                     checked
                 )
+
                 recreate()
             }
         }
@@ -169,7 +191,10 @@ class SettingsActivity : Activity() {
             "Video creation workspace • Voiceover • Scenes • AI Clips",
             13f
         )
-        info.setTextColor(Color.LTGRAY)
+
+        info.setTextColor(
+            ThemeManager.secondaryText(this)
+        )
 
         infoCard.addView(
             info,
