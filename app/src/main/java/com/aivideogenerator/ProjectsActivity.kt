@@ -65,7 +65,7 @@ class ProjectsActivity : Activity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.rgb(10, 10, 15))
+            setBackgroundColor(ThemeManager.background(this@ProjectsActivity))
         }
 
         val header = LinearLayout(this).apply {
@@ -74,7 +74,7 @@ class ProjectsActivity : Activity() {
             setPadding(dp(18), dp(18), dp(18), dp(14))
         }
 
-        val back = text("‹", 34f, Color.WHITE).apply {
+        val back = text("‹", 34f, ThemeManager.primaryText(this@ProjectsActivity)).apply {
             gravity = Gravity.CENTER
             setOnClickListener {
                 finish()
@@ -89,7 +89,7 @@ class ProjectsActivity : Activity() {
         val title = text(
             "Projects",
             22f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@ProjectsActivity),
             true
         )
 
@@ -105,11 +105,11 @@ class ProjectsActivity : Activity() {
         val newButton = text(
             "+ New",
             14f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@ProjectsActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
-            background = background(Color.rgb(105, 70, 205), 12)
+            background = background(ThemeManager.accentStrong(this@ProjectsActivity), 12)
 
             setOnClickListener {
                 startActivity(
@@ -164,13 +164,13 @@ class ProjectsActivity : Activity() {
                 gravity = Gravity.CENTER
                 setPadding(dp(20), dp(70), dp(20), dp(70))
                 background = background(
-                    Color.rgb(18, 19, 26),
+                    ThemeManager.surface(this@ProjectsActivity),
                     18,
-                    Color.rgb(38, 39, 50)
+                    ThemeManager.border(this@ProjectsActivity)
                 )
             }
 
-            val icon = text("▣", 34f, Color.rgb(105, 106, 120), true)
+            val icon = text("▣", 34f, ThemeManager.mutedText(this@ProjectsActivity), true)
             icon.gravity = Gravity.CENTER
 
             empty.addView(icon)
@@ -178,7 +178,7 @@ class ProjectsActivity : Activity() {
             val title = text(
                 "No projects yet",
                 17f,
-                Color.WHITE,
+                ThemeManager.primaryText(this@ProjectsActivity),
                 true
             )
             title.gravity = Gravity.CENTER
@@ -194,7 +194,7 @@ class ProjectsActivity : Activity() {
             val hint = text(
                 "Create your first AI video project.",
                 13f,
-                Color.rgb(130, 132, 145)
+                ThemeManager.mutedText(this@ProjectsActivity)
             )
             hint.gravity = Gravity.CENTER
 
@@ -228,9 +228,9 @@ class ProjectsActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(16), dp(17), dp(16))
             background = background(
-                Color.rgb(22, 23, 31),
+                ThemeManager.surface(this@ProjectsActivity),
                 17,
-                Color.rgb(42, 43, 55)
+                ThemeManager.border(this@ProjectsActivity)
             )
 
             setOnClickListener {
@@ -243,9 +243,9 @@ class ProjectsActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        val icon = text("🎬", 22f, Color.WHITE)
+        val icon = text("🎬", 22f, ThemeManager.primaryText(this@ProjectsActivity))
         icon.gravity = Gravity.CENTER
-        icon.background = background(Color.rgb(53, 36, 105), 12)
+        icon.background = background(ThemeManager.accent(this@ProjectsActivity), 12)
 
         top.addView(
             icon,
@@ -259,7 +259,7 @@ class ProjectsActivity : Activity() {
         val name = text(
             project.name,
             16f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@ProjectsActivity),
             true
         )
 
@@ -276,7 +276,7 @@ class ProjectsActivity : Activity() {
             else
                 scriptPreview,
             12f,
-            Color.rgb(145, 147, 160)
+            ThemeManager.mutedText(this@ProjectsActivity)
         )
 
         info.addView(name)
@@ -291,7 +291,7 @@ class ProjectsActivity : Activity() {
 
         top.addView(info, infoParams)
 
-        val arrow = text("›", 27f, Color.rgb(125, 127, 140))
+        val arrow = text("›", 27f, ThemeManager.subtleText(this@ProjectsActivity))
         arrow.gravity = Gravity.CENTER
 
         top.addView(
@@ -308,7 +308,7 @@ class ProjectsActivity : Activity() {
 
         val edit = actionButton(
             "Open",
-            Color.rgb(105, 70, 205)
+            ThemeManager.accentStrong(this@ProjectsActivity)
         )
 
         edit.setOnClickListener {
@@ -317,7 +317,7 @@ class ProjectsActivity : Activity() {
 
         val delete = actionButton(
             "Delete",
-            Color.rgb(48, 49, 60)
+            ThemeManager.border(this@ProjectsActivity)
         )
 
         delete.setOnClickListener {
@@ -363,7 +363,7 @@ class ProjectsActivity : Activity() {
         title: String,
         color: Int
     ): TextView =
-        text(title, 13f, Color.WHITE, true).apply {
+        text(title, 13f, ThemeManager.primaryText(this@ProjectsActivity), true).apply {
             gravity = Gravity.CENTER
             background = background(color, 11)
         }

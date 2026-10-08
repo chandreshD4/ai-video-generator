@@ -72,4 +72,89 @@ object ThemeManager {
             Color.rgb(90, 90, 98)
         }
     }
+
+
+    fun hintText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(105, 107, 120)
+        } else {
+            Color.rgb(120, 120, 130)
+        }
+    }
+
+    fun inputBackground(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(23, 24, 32)
+        } else {
+            Color.rgb(242, 242, 246)
+        }
+    }
+
+    fun inputStroke(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(43, 44, 56)
+        } else {
+            Color.rgb(210, 210, 218)
+        }
+    }
+
+    fun accent(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(150, 120, 245)
+        } else {
+            Color.rgb(105, 70, 205)
+        }
+    }
+
+    fun accentStrong(context: Context): Int {
+        return Color.rgb(105, 70, 205)
+    }
+
+    fun mutedText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(145, 147, 160)
+        } else {
+            Color.rgb(90, 90, 98)
+        }
+    }
+
+    fun subtleText(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(120, 122, 135)
+        } else {
+            Color.rgb(105, 107, 120)
+        }
+    }
+
+    fun surface(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(18, 19, 26)
+        } else {
+            Color.WHITE
+        }
+    }
+
+    fun surfaceAlt(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(25, 24, 36)
+        } else {
+            Color.rgb(242, 242, 246)
+        }
+    }
+
+    fun border(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(43, 44, 56)
+        } else {
+            Color.rgb(210, 210, 218)
+        }
+    }
+
+    fun sectionBackground(context: Context): Int {
+        return if (isDarkMode(context)) {
+            Color.rgb(20, 21, 29)
+        } else {
+            Color.rgb(245, 245, 248)
+        }
+    }
 }

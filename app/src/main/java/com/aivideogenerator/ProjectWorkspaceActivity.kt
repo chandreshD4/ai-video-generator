@@ -95,7 +95,7 @@ class ProjectWorkspaceActivity : Activity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.rgb(10, 10, 15))
+            setBackgroundColor(ThemeManager.background(this@ProjectWorkspaceActivity))
         }
 
         val header = LinearLayout(this).apply {
@@ -109,7 +109,7 @@ class ProjectWorkspaceActivity : Activity() {
             )
         }
 
-        val back = text("‹", 34f, Color.WHITE).apply {
+        val back = text("‹", 34f, ThemeManager.primaryText(this@ProjectWorkspaceActivity)).apply {
             gravity = Gravity.CENTER
             setOnClickListener {
                 finish()
@@ -128,7 +128,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 "Project Workspace",
                 20f,
-                Color.WHITE,
+                ThemeManager.primaryText(this@ProjectWorkspaceActivity),
                 true
             ),
             LinearLayout.LayoutParams(
@@ -143,12 +143,12 @@ class ProjectWorkspaceActivity : Activity() {
         val save = text(
             "Save",
             14f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@ProjectWorkspaceActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
             background = background(
-                Color.rgb(105, 70, 205),
+                ThemeManager.accentStrong(this@ProjectWorkspaceActivity),
                 12
             )
             setOnClickListener {
@@ -188,7 +188,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 project.name,
                 24f,
-                Color.WHITE,
+                ThemeManager.primaryText(this@ProjectWorkspaceActivity),
                 true
             )
         )
@@ -197,7 +197,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 "Build your video step by step.",
                 14f,
-                Color.rgb(155, 157, 170)
+                ThemeManager.secondaryText(this@ProjectWorkspaceActivity)
             ),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -211,7 +211,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 "PROJECT",
                 11f,
-                Color.rgb(150, 120, 245),
+                ThemeManager.accent(this@ProjectWorkspaceActivity),
                 true
             ),
             LinearLayout.LayoutParams(
@@ -225,8 +225,8 @@ class ProjectWorkspaceActivity : Activity() {
         nameInput = EditText(this).apply {
             setText(project.name)
             textSize = 17f
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.rgb(110, 112, 125))
+            setTextColor(ThemeManager.primaryText(this@ProjectWorkspaceActivity))
+            setHintTextColor(ThemeManager.hintText(this@ProjectWorkspaceActivity))
             hint = "Project name"
             setSingleLine(true)
             setPadding(
@@ -236,7 +236,7 @@ class ProjectWorkspaceActivity : Activity() {
                 0
             )
             background = background(
-                Color.rgb(23, 24, 32),
+                ThemeManager.inputBackground(this@ProjectWorkspaceActivity),
                 14
             )
         }
@@ -255,7 +255,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 "VIDEO SCRIPT",
                 11f,
-                Color.rgb(150, 120, 245),
+                ThemeManager.accent(this@ProjectWorkspaceActivity),
                 true
             ),
             LinearLayout.LayoutParams(
@@ -269,8 +269,8 @@ class ProjectWorkspaceActivity : Activity() {
         scriptInput = EditText(this).apply {
             setText(project.script)
             textSize = 15f
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.rgb(105, 107, 120))
+            setTextColor(ThemeManager.primaryText(this@ProjectWorkspaceActivity))
+            setHintTextColor(ThemeManager.hintText(this@ProjectWorkspaceActivity))
             hint = "Write or paste your video script here..."
             gravity = Gravity.TOP
             minLines = 8
@@ -281,7 +281,7 @@ class ProjectWorkspaceActivity : Activity() {
                 dp(16)
             )
             background = background(
-                Color.rgb(23, 24, 32),
+                ThemeManager.inputBackground(this@ProjectWorkspaceActivity),
                 16
             )
         }
@@ -300,7 +300,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 "CREATION WORKSPACE",
                 11f,
-                Color.rgb(150, 120, 245),
+                ThemeManager.accent(this@ProjectWorkspaceActivity),
                 true
             ),
             LinearLayout.LayoutParams(
@@ -392,12 +392,12 @@ class ProjectWorkspaceActivity : Activity() {
         val generate = text(
             "Start Generation",
             16f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@ProjectWorkspaceActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
             background = background(
-                Color.rgb(105, 70, 205),
+                ThemeManager.accentStrong(this@ProjectWorkspaceActivity),
                 16
             )
 
@@ -457,14 +457,14 @@ class ProjectWorkspaceActivity : Activity() {
 
             background = background(
                 if (enabled)
-                    Color.rgb(25, 24, 36)
+                    ThemeManager.surfaceAlt(this@ProjectWorkspaceActivity)
                 else
-                    Color.rgb(18, 19, 26),
+                    ThemeManager.surface(this@ProjectWorkspaceActivity),
                 17,
                 if (enabled)
-                    Color.rgb(75, 60, 110)
+                    ThemeManager.accent(this@ProjectWorkspaceActivity)
                 else
-                    Color.rgb(38, 39, 49)
+                    ThemeManager.border(this@ProjectWorkspaceActivity)
             )
 
             alpha =
@@ -479,7 +479,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 icon,
                 27f,
-                Color.WHITE
+                ThemeManager.primaryText(this@ProjectWorkspaceActivity)
             ).apply {
                 gravity = Gravity.CENTER
             },
@@ -493,7 +493,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 title,
                 15f,
-                Color.WHITE,
+                ThemeManager.primaryText(this@ProjectWorkspaceActivity),
                 true
             ).apply {
                 gravity = Gravity.CENTER
@@ -510,7 +510,7 @@ class ProjectWorkspaceActivity : Activity() {
             text(
                 status,
                 11f,
-                Color.rgb(135, 137, 150)
+                ThemeManager.mutedText(this@ProjectWorkspaceActivity)
             ).apply {
                 gravity = Gravity.CENTER
                 maxLines = 2

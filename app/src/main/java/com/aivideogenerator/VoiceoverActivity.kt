@@ -118,7 +118,7 @@ private val maleVoices = listOf(
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.rgb(10, 10, 15))
+            setBackgroundColor(ThemeManager.background(this@VoiceoverActivity))
         }
 
         val header = LinearLayout(this).apply {
@@ -127,7 +127,7 @@ private val maleVoices = listOf(
             setPadding(dp(16), dp(16), dp(16), dp(12))
         }
 
-        val back = tv("‹", 34f, Color.WHITE).apply {
+        val back = tv("‹", 34f, ThemeManager.primaryText(this@VoiceoverActivity)).apply {
             gravity = Gravity.CENTER
             setOnClickListener { finish() }
         }
@@ -135,7 +135,7 @@ private val maleVoices = listOf(
         header.addView(back, LinearLayout.LayoutParams(dp(45), dp(48)))
 
         header.addView(
-            tv("Voiceover Generator", 20f, Color.WHITE, true),
+            tv("Voiceover Generator", 20f, ThemeManager.primaryText(this@VoiceoverActivity), true),
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -154,13 +154,13 @@ private val maleVoices = listOf(
             setPadding(dp(20), dp(8), dp(20), dp(40))
         }
 
-        content.addView(tv(project.name, 24f, Color.WHITE, true))
+        content.addView(tv(project.name, 24f, ThemeManager.primaryText(this@VoiceoverActivity), true))
 
         content.addView(
             tv(
                 "Create natural AI narration and compare different voices.",
                 14f,
-                Color.rgb(155, 157, 170)
+                ThemeManager.secondaryText(this@VoiceoverActivity)
             ),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -171,7 +171,7 @@ private val maleVoices = listOf(
         )
 
         content.addView(
-            tv("SCRIPT", 11f, Color.rgb(150, 120, 245), true),
+            tv("SCRIPT", 11f, ThemeManager.accent(this@VoiceoverActivity), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -183,8 +183,8 @@ private val maleVoices = listOf(
         scriptInput = EditText(this).apply {
             setText(project.script)
             textSize = 15f
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.rgb(105, 107, 120))
+            setTextColor(ThemeManager.primaryText(this@VoiceoverActivity))
+            setHintTextColor(ThemeManager.hintText(this@VoiceoverActivity))
             hint = "Write or paste your video script..."
             gravity = Gravity.TOP
             minLines = 12
@@ -195,9 +195,9 @@ private val maleVoices = listOf(
             isVerticalScrollBarEnabled = true
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = bg(
-                Color.rgb(23, 24, 32),
+                ThemeManager.inputBackground(this@VoiceoverActivity),
                 16,
-                Color.rgb(43, 44, 56)
+                ThemeManager.border(this@VoiceoverActivity)
             )
 
             setOnTouchListener { view, event ->
@@ -225,7 +225,7 @@ private val maleVoices = listOf(
         )
 
         content.addView(
-            tv("GENERATED AUDIO", 11f, Color.rgb(150, 120, 245), true),
+            tv("GENERATED AUDIO", 11f, ThemeManager.accent(this@VoiceoverActivity), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -243,7 +243,7 @@ private val maleVoices = listOf(
         renderSamples()
 
         content.addView(
-            tv("VOICE", 11f, Color.rgb(150, 120, 245), true),
+            tv("VOICE", 11f, ThemeManager.accent(this@VoiceoverActivity), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -276,7 +276,7 @@ private val maleVoices = listOf(
         )
 
         content.addView(
-            tv("VOICE MODEL", 11f, Color.rgb(150, 120, 245), true),
+            tv("VOICE MODEL", 11f, ThemeManager.accent(this@VoiceoverActivity), true),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -311,17 +311,17 @@ private val maleVoices = listOf(
         val statusCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(15), dp(16), dp(15))
-            background = bg(Color.rgb(20, 21, 28), 15)
+            background = bg(ThemeManager.surface(this@VoiceoverActivity), 15)
         }
 
         statusCard.addView(
-            tv("Generation Status", 14f, Color.WHITE, true)
+            tv("Generation Status", 14f, ThemeManager.primaryText(this@VoiceoverActivity), true)
         )
 
         statusText = tv(
             project.voiceoverStatus,
             13f,
-            Color.rgb(140, 142, 155)
+            ThemeManager.mutedText(this@VoiceoverActivity)
         )
 
         statusCard.addView(
@@ -353,7 +353,7 @@ private val maleVoices = listOf(
             }
         )
 
-        progressText = tv("", 12f, Color.rgb(145, 147, 160))
+        progressText = tv("", 12f, ThemeManager.mutedText(this@VoiceoverActivity))
 
         statusCard.addView(
             progressText,
@@ -378,11 +378,11 @@ private val maleVoices = listOf(
         generateButton = tv(
             "Generate Voiceover",
             16f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@VoiceoverActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
-            background = bg(Color.rgb(105, 70, 205), 16)
+            background = bg(ThemeManager.accentStrong(this@VoiceoverActivity), 16)
             setOnClickListener { generateVoiceover() }
         }
 
@@ -400,7 +400,7 @@ private val maleVoices = listOf(
             tv(
                 "API key stays outside the APK. Voice generation is handled through the secure testing bridge.",
                 12f,
-                Color.rgb(115, 117, 130)
+                ThemeManager.subtleText(this@VoiceoverActivity)
             ).apply {
                 setPadding(dp(4), dp(14), dp(4), 0)
             }
@@ -431,14 +431,14 @@ private val maleVoices = listOf(
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(14), dp(10), dp(14), dp(10))
             background = bg(
-                Color.rgb(20, 21, 29),
+                ThemeManager.surface(this@VoiceoverActivity),
                 15,
-                Color.rgb(48, 49, 62)
+                ThemeManager.border(this@VoiceoverActivity)
             )
         }
 
         card.addView(
-            tv(icon, 23f, Color.WHITE).apply {
+            tv(icon, 23f, ThemeManager.primaryText(this@VoiceoverActivity)).apply {
                 gravity = Gravity.CENTER
             },
             LinearLayout.LayoutParams(dp(44), dp(48))
@@ -449,9 +449,9 @@ private val maleVoices = listOf(
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        labels.addView(tv(title, 12f, Color.rgb(145, 147, 160)))
+        labels.addView(tv(title, 12f, ThemeManager.mutedText(this@VoiceoverActivity)))
 
-        val valueView = tv(value, 15f, Color.WHITE, true)
+        val valueView = tv(value, 15f, ThemeManager.primaryText(this@VoiceoverActivity), true)
         valueView.tag = "value"
 
         labels.addView(
@@ -476,7 +476,7 @@ private val maleVoices = listOf(
         )
 
         card.addView(
-            tv("›", 28f, Color.rgb(145, 147, 160)).apply {
+            tv("›", 28f, ThemeManager.mutedText(this@VoiceoverActivity)).apply {
                 gravity = Gravity.CENTER
             },
             LinearLayout.LayoutParams(dp(35), dp(48))
@@ -542,7 +542,7 @@ private val maleVoices = listOf(
                 tv(
                     voice.replaceFirstChar { it.uppercase() },
                     15f,
-                    Color.WHITE,
+                    ThemeManager.primaryText(this@VoiceoverActivity),
                     true
                 )
             )
@@ -551,7 +551,7 @@ private val maleVoices = listOf(
                 tv(
                     category,
                     11f,
-                    Color.rgb(145, 147, 160)
+                    ThemeManager.mutedText(this@VoiceoverActivity)
                 )
             )
 
@@ -699,7 +699,7 @@ private val maleVoices = listOf(
             val empty = tv(
                 "Generated voice samples will appear here.",
                 13f,
-                Color.rgb(120, 122, 135)
+                ThemeManager.subtleText(this@VoiceoverActivity)
             )
 
             empty.setPadding(
@@ -731,9 +731,9 @@ private val maleVoices = listOf(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(15), dp(13), dp(15), dp(13))
             background = bg(
-                Color.rgb(20, 21, 29),
+                ThemeManager.surface(this@VoiceoverActivity),
                 15,
-                Color.rgb(45, 46, 59)
+                ThemeManager.border(this@VoiceoverActivity)
             )
         }
 
@@ -745,7 +745,7 @@ private val maleVoices = listOf(
         val voice = tv(
             sample.voice.replaceFirstChar { it.uppercase() },
             16f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@VoiceoverActivity),
             true
         )
 
@@ -768,7 +768,7 @@ private val maleVoices = listOf(
             tv(
                 modelShort,
                 11f,
-                Color.rgb(160, 140, 235),
+                ThemeManager.accent(this@VoiceoverActivity),
                 true
             )
         )
@@ -779,7 +779,7 @@ private val maleVoices = listOf(
             tv(
                 sample.model,
                 11f,
-                Color.rgb(125, 127, 140)
+                ThemeManager.subtleText(this@VoiceoverActivity)
             ),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -800,11 +800,11 @@ private val maleVoices = listOf(
             else
                 "Play",
             14f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@VoiceoverActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
-            background = bg(Color.rgb(45, 46, 58), 12)
+            background = bg(ThemeManager.border(this@VoiceoverActivity), 12)
             setOnClickListener {
                 playSample(sample)
             }
@@ -825,11 +825,11 @@ private val maleVoices = listOf(
         val download = tv(
             "Download",
             14f,
-            Color.WHITE,
+            ThemeManager.primaryText(this@VoiceoverActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
-            background = bg(Color.rgb(105, 70, 205), 12)
+            background = bg(ThemeManager.accentStrong(this@VoiceoverActivity), 12)
             setOnClickListener {
                 downloadSample(sample)
             }
