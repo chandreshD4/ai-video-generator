@@ -8,8 +8,10 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -28,7 +30,7 @@ class MainActivity : Activity() {
         color: Int,
         bold: Boolean = false
     ): TextView =
-        TextView(this).apply {
+        TextView(this@MainActivity).apply {
             text = value
             textSize = size
             setTextColor(color)
@@ -77,7 +79,7 @@ class MainActivity : Activity() {
         large: Boolean = false
     ): LinearLayout {
 
-        val card = LinearLayout(this).apply {
+        val card = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
 
             setPadding(
@@ -88,9 +90,9 @@ class MainActivity : Activity() {
             )
 
             background = roundedBackground(
-                ThemeManager.card(this),
+                ThemeManager.card(this@MainActivity),
                 20f,
-                ThemeManager.border(this),
+                ThemeManager.border(this@MainActivity),
                 1
             )
 
@@ -98,7 +100,7 @@ class MainActivity : Activity() {
             isFocusable = true
         }
 
-        val iconBox = TextView(this).apply {
+        val iconBox = TextView(this@MainActivity).apply {
             text = icon
             textSize = if (large) 28f else 24f
             gravity = Gravity.CENTER
@@ -134,7 +136,7 @@ class MainActivity : Activity() {
         val subtitleView = label(
             subtitle,
             13f,
-            ThemeManager.secondaryText(this)
+            ThemeManager.secondaryText(this@MainActivity)
         )
 
         card.addView(
@@ -150,7 +152,7 @@ class MainActivity : Activity() {
         val arrow = label(
             "›",
             28f,
-            ThemeManager.subtleText(this)
+            ThemeManager.subtleText(this@MainActivity)
         )
 
         arrow.gravity = Gravity.CENTER
@@ -175,13 +177,13 @@ class MainActivity : Activity() {
         actionClick: (() -> Unit)? = null
     ): LinearLayout {
 
-        val row = LinearLayout(this).apply {
+        val row = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
 
         row.addView(
-            label(title, 19f, ThemeManager.primaryText(this), true),
+            label(title, 19f, ThemeManager.primaryText(this@MainActivity), true),
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -193,7 +195,7 @@ class MainActivity : Activity() {
             val actionView = label(
                 action,
                 13f,
-                ThemeManager.accent(this),
+                ThemeManager.accent(this@MainActivity),
                 true
             )
 
@@ -210,15 +212,15 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val previousCrash = CrashLogger.consume(this)
+        val previousCrash = CrashLogger.consume(this@MainActivity)
 
         if (!previousCrash.isNullOrBlank()) {
             showCrashReport(previousCrash)
             return
         }
 
-        ThemeManager.apply(this)
-        store = ProjectStore(this)
+        ThemeManager.apply(this@MainActivity)
+        store = ProjectStore(this@MainActivity)
         applySystemBars()
         buildHome()
     }
@@ -232,10 +234,10 @@ class MainActivity : Activity() {
     }
 
     private fun applySystemBars() {
-        val dark = ThemeManager.isDarkMode(this)
+        val dark = ThemeManager.isDarkMode(this@MainActivity)
 
-        window.statusBarColor = ThemeManager.background(this)
-        window.navigationBarColor = ThemeManager.background(this)
+        window.statusBarColor = ThemeManager.background(this@MainActivity)
+        window.navigationBarColor = ThemeManager.background(this@MainActivity)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             var flags = 0
@@ -253,9 +255,9 @@ class MainActivity : Activity() {
     }
 
     private fun showCrashReport(error: String) {
-        val scroll = ScrollView(this)
+        val scroll = ScrollView(this@MainActivity)
 
-        val message = TextView(this).apply {
+        val message = TextView(this@MainActivity).apply {
             text = error
             textSize = 12f
             setTextIsSelectable(true)
@@ -264,7 +266,7 @@ class MainActivity : Activity() {
 
         scroll.addView(message)
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this@MainActivity)
             .setTitle("Previous App Crash")
             .setMessage("App पिछली बार crash हुई थी। नीचे पूरा error है।")
             .setView(scroll)
@@ -286,19 +288,19 @@ class MainActivity : Activity() {
 
     private fun buildHome() {
 
-        val backgroundColor = ThemeManager.background(this)
+        val backgroundColor = ThemeManager.background(this@MainActivity)
 
-        val root = LinearLayout(this).apply {
+        val root = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(backgroundColor)
         }
 
-        val scroll = ScrollView(this).apply {
+        val scroll = ScrollView(this@MainActivity).apply {
             isFillViewport = true
             setBackgroundColor(backgroundColor)
         }
 
-        content = LinearLayout(this).apply {
+        content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(
                 dp(20),
@@ -309,12 +311,12 @@ class MainActivity : Activity() {
         }
 
         // Header
-        val header = LinearLayout(this).apply {
+        val header = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        val headingArea = LinearLayout(this).apply {
+        val headingArea = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
         }
 
@@ -322,7 +324,7 @@ class MainActivity : Activity() {
             label(
                 "AI CREATIVE STUDIO",
                 11f,
-                ThemeManager.accent(this),
+                ThemeManager.accent(this@MainActivity),
                 true
             )
         )
@@ -351,16 +353,16 @@ class MainActivity : Activity() {
             )
         )
 
-        val settings = TextView(this).apply {
+        val settings = TextView(this@MainActivity).apply {
             text = "⚙"
             textSize = 25f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
 
             background = roundedBackground(
-                ThemeManager.surfaceAlt(this),
+                ThemeManager.surfaceAlt(this@MainActivity),
                 15f,
-                ThemeManager.border(this),
+                ThemeManager.border(this@MainActivity),
                 1
             )
         }
@@ -376,7 +378,7 @@ class MainActivity : Activity() {
         content.addView(header)
 
         // Hero
-        val hero = LinearLayout(this).apply {
+        val hero = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(
                 dp(22),
@@ -386,8 +388,8 @@ class MainActivity : Activity() {
             )
 
             background = gradientBackground(
-                ThemeManager.blue(this),
-                ThemeManager.homeHeroEnd(this),
+                ThemeManager.homeHeroStart(this@MainActivity),
+                ThemeManager.homeHeroEnd(this@MainActivity),
                 24f
             )
         }
@@ -405,7 +407,7 @@ class MainActivity : Activity() {
             label(
                 "Generate voice, scenes, AI clips and final videos from one place.",
                 13f,
-                ThemeManager.secondaryText(this)
+                ThemeManager.secondaryText(this@MainActivity)
             ),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -424,7 +426,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
 
             background = roundedBackground(
-                ThemeManager.primaryAction(this),
+                ThemeManager.primaryAction(this@MainActivity),
                 14f
             )
 
@@ -473,7 +475,7 @@ class MainActivity : Activity() {
             "🎙",
             "Voiceover Generator",
             "Turn your script into natural AI voice",
-            ThemeManager.blue(this),
+            ThemeManager.blue(this@MainActivity),
             true
         )
 
@@ -487,7 +489,7 @@ class MainActivity : Activity() {
             }
         )
 
-        val row = LinearLayout(this).apply {
+        val row = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
@@ -495,14 +497,14 @@ class MainActivity : Activity() {
             "🎬",
             "AI Scenes",
             "Images & clips",
-            ThemeManager.green(this)
+            ThemeManager.green(this@MainActivity)
         )
 
         val render = featureCard(
             "🎞",
             "Video Render",
             "Final MP4",
-            ThemeManager.red(this)
+            ThemeManager.red(this@MainActivity)
         )
 
         row.addView(
@@ -535,7 +537,7 @@ class MainActivity : Activity() {
             "✨",
             "Video Quality Enhancer",
             "Upscale and improve your generated videos",
-            ThemeManager.saffron(this)
+            ThemeManager.saffron(this@MainActivity)
         )
 
         content.addView(
@@ -583,7 +585,7 @@ class MainActivity : Activity() {
         )
 
         // Bottom navigation
-        val bottom = LinearLayout(this).apply {
+        val bottom = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             setPadding(
@@ -594,7 +596,7 @@ class MainActivity : Activity() {
             )
 
             background = roundedBackground(
-                ThemeManager.card(this),
+                ThemeManager.card(this@MainActivity),
                 20f
             )
         }
@@ -687,9 +689,9 @@ class MainActivity : Activity() {
             value,
             11f,
             if (selected)
-                ThemeManager.navSelected(this)
+                ThemeManager.navSelected(this@MainActivity)
             else
-                ThemeManager.navUnselected(this),
+                ThemeManager.navUnselected(this@MainActivity),
             true
         ).apply {
             gravity = Gravity.CENTER
@@ -709,7 +711,7 @@ class MainActivity : Activity() {
 
         if (projects.isEmpty()) {
 
-            val emptyProject = LinearLayout(this).apply {
+            val emptyProject = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
 
@@ -721,9 +723,9 @@ class MainActivity : Activity() {
                 )
 
                 background = roundedBackground(
-                    ThemeManager.card(this),
+                    ThemeManager.card(this@MainActivity),
                     18f,
-                    ThemeManager.border(this),
+                    ThemeManager.border(this@MainActivity),
                     1
                 )
             }
@@ -731,7 +733,7 @@ class MainActivity : Activity() {
             val folder = label(
                 "▣",
                 28f,
-                ThemeManager.mutedText(this),
+                ThemeManager.mutedText(this@MainActivity),
                 true
             )
             folder.gravity = Gravity.CENTER
@@ -741,7 +743,7 @@ class MainActivity : Activity() {
             val noProjects = label(
                 "No projects yet",
                 15f,
-                ThemeManager.primaryText(this),
+                ThemeManager.primaryText(this@MainActivity),
                 true
             )
             noProjects.gravity = Gravity.CENTER
@@ -759,7 +761,7 @@ class MainActivity : Activity() {
             val hint = label(
                 "Your generated videos will appear here.",
                 12f,
-                ThemeManager.subtleText(this)
+                ThemeManager.subtleText(this@MainActivity)
             )
             hint.gravity = Gravity.CENTER
 
@@ -788,7 +790,7 @@ class MainActivity : Activity() {
 
         projects.forEach { project ->
 
-            val card = LinearLayout(this).apply {
+            val card = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(
@@ -799,9 +801,9 @@ class MainActivity : Activity() {
                 )
 
                 background = roundedBackground(
-                    ThemeManager.card(this),
+                    ThemeManager.card(this@MainActivity),
                     15f,
-                    ThemeManager.border(this),
+                    ThemeManager.border(this@MainActivity),
                     1
                 )
 
@@ -827,7 +829,7 @@ class MainActivity : Activity() {
             )
             icon.gravity = Gravity.CENTER
             icon.background = roundedBackground(
-                ThemeManager.blue(this),
+                ThemeManager.blue(this@MainActivity),
                 11f
             )
 
@@ -839,7 +841,7 @@ class MainActivity : Activity() {
                 )
             )
 
-            val info = LinearLayout(this).apply {
+            val info = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
             }
 
@@ -869,7 +871,7 @@ class MainActivity : Activity() {
                     else
                         preview,
                     11f,
-                    ThemeManager.subtleText(this)
+                    ThemeManager.subtleText(this@MainActivity)
                 ),
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -894,7 +896,7 @@ class MainActivity : Activity() {
                 label(
                     "›",
                     26f,
-                    ThemeManager.subtleText(this)
+                    ThemeManager.subtleText(this@MainActivity)
                 ).apply {
                     gravity = Gravity.CENTER
                 },
