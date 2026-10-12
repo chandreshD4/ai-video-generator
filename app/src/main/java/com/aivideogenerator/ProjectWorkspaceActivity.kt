@@ -343,9 +343,55 @@ class ProjectWorkspaceActivity : Activity() {
             grid,
             "🖼",
             "Scenes & Images",
-            "Not generated",
-            false
-        )
+            if (project.scenes.isEmpty()) "Not generated"
+            else {
+                val ready = project.scenes.count { it.imagePath.isNotBlank() }
+                "$ready/${project.scenes.size} images ready"
+            },
+            true
+        ) {
+            saveProject()
+
+            if (project.script.isBlank()) {
+                Toast.makeText(
+                    this,
+                    "Please enter a script first",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                if (project.scenes.isEmpty()) {
+                    val scenes = SceneGenerator.generateScenes(project.script)
+                    project = project.copy(
+                        scenes = scenes,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    projectStore.saveProject(project)
+                }
+
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Scenes & AI Images")
+                    .setMessage(
+                        "${project.scenes.size} scenes are ready. " +
+                        "Generating images may use Pollinations credits. " +
+                        "Keep the local image server running in Termux."
+                    )
+                    .setNegativeButton("Cancel", null)
+                    .setNeutralButton("View Scenes") { _, _ ->
+                        val list = project.scenes.joinToString("\\n\\n") {
+                            "${it.sceneNumber}. ${it.title}\\n${it.description}\\nImage: ${it.imageStatus}"
+                        }
+                        android.app.AlertDialog.Builder(this)
+                            .setTitle("Project Scenes")
+                            .setMessage(list)
+                            .setPositiveButton("Done", null)
+                            .show()
+                    }
+                    .setPositiveButton("Generate Images") { _, _ ->
+                        generateSceneImages()
+                    }
+                    .show()
+            }
+        }
 
         addWorkspaceCard(
             grid,
@@ -434,6 +480,81 @@ class ProjectWorkspaceActivity : Activity() {
         )
 
         setContentView(root)
+    }
+
+    private fun generateSceneImages() {
+        val pending = project.scenes.filter { it.imagePath.isBlank() }
+        if (pending.isEmpty()) {
+            Toast.makeText(this, "All scene images are already generated", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val progress = android.app.ProgressDialog(this).apply {
+            setTitle("Generating scene images")
+            setMessage("Preparing...")
+            setProgressStyle(android.app.ProgressDialog.STYLE_SPINNER)
+            setCancelable(false)
+            show()
+        }
+
+        var completed = 0
+        var failed = 0
+
+        fun process(index: Int) {
+            if (index >= pending.size) {
+                progress.dismiss()
+                projectStore.saveProject(project)
+                buildScreen()
+                Toast.makeText(
+                    this,
+                    "Image generation finished: $completed succeeded, $failed failed",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+
+            val scene = pending[index]
+            progress.setMessage("Scene ${scene.sceneNumber} (${index + 1}/${pending.size})")
+
+            project = project.copy(
+                scenes = project.scenes.map { if (it.id == scene.id) it.copy(imageStatus = "Generating") else it },
+                updatedAt = System.currentTimeMillis()
+            )
+            projectStore.saveProject(project)
+
+            SceneImageGenerator.generate(
+                this,
+                scene.imagePrompt,
+                object : SceneImageGenerator.Callback {
+                    override fun onSuccess(imagePath: String) {
+                        project = project.copy(
+                            scenes = project.scenes.map { if (it.id == scene.id) it.copy(imagePath = imagePath, imageStatus = "Generated") else it },
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        projectStore.saveProject(project)
+                        completed++
+                        process(index + 1)
+                    }
+
+                    override fun onError(message: String) {
+                        project = project.copy(
+                            scenes = project.scenes.map { if (it.id == scene.id) it.copy(imageStatus = "Failed") else it },
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        projectStore.saveProject(project)
+                        failed++
+                        Toast.makeText(
+                            this@ProjectWorkspaceActivity,
+                            "Scene ${scene.sceneNumber}: $message",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        process(index + 1)
+                    }
+                }
+            )
+        }
+
+        process(0)
     }
 
     private fun addWorkspaceCard(

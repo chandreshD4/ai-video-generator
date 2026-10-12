@@ -10,7 +10,9 @@ data class VideoScene(
     val title: String,
     val description: String,
     val imagePrompt: String,
-    val status: String = "Pending"
+    val status: String = "Pending",
+    val imagePath: String = "",
+    val imageStatus: String = "Not generated"
 )
 
 data class VideoProject(
@@ -50,7 +52,9 @@ class ProjectStore(context: Context) {
                         title = scene.optString("title", ""),
                         description = scene.optString("description", ""),
                         imagePrompt = scene.optString("imagePrompt", ""),
-                        status = scene.optString("status", "Pending")
+                        status = scene.optString("status", "Pending"),
+                        imagePath = scene.optString("imagePath", ""),
+                        imageStatus = scene.optString("imageStatus", "Not generated")
                     )
                 }
 
@@ -122,6 +126,8 @@ class ProjectStore(context: Context) {
                 sceneItem.put("description", scene.description)
                 sceneItem.put("imagePrompt", scene.imagePrompt)
                 sceneItem.put("status", scene.status)
+                sceneItem.put("imagePath", scene.imagePath)
+                sceneItem.put("imageStatus", scene.imageStatus)
                 sceneArray.put(sceneItem)
             }
 
