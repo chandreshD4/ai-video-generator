@@ -377,14 +377,7 @@ class ProjectWorkspaceActivity : Activity() {
                     )
                     .setNegativeButton("Cancel", null)
                     .setNeutralButton("View Scenes") { _, _ ->
-                        val list = project.scenes.joinToString("\\n\\n") {
-                            "${it.sceneNumber}. ${it.title}\\n${it.description}\\nImage: ${it.imageStatus}"
-                        }
-                        android.app.AlertDialog.Builder(this)
-                            .setTitle("Project Scenes")
-                            .setMessage(list)
-                            .setPositiveButton("Done", null)
-                            .show()
+                        showSceneImages()
                     }
                     .setPositiveButton("Generate Images") { _, _ ->
                         generateSceneImages()
@@ -480,6 +473,69 @@ class ProjectWorkspaceActivity : Activity() {
         )
 
         setContentView(root)
+    }
+
+    private fun showSceneImages() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+        }
+
+        for (scene in project.scenes) {
+            content.addView(TextView(this).apply {
+                text = "${scene.sceneNumber}. ${scene.title}"
+                textSize = 18f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(0, dp(12), 0, dp(4))
+            })
+
+            content.addView(TextView(this).apply {
+                text = "${scene.description}\nStatus: ${scene.imageStatus}"
+                textSize = 14f
+                setPadding(0, 0, 0, dp(8))
+            })
+
+            val file = java.io.File(scene.imagePath)
+            if (scene.imagePath.isNotBlank() && file.isFile) {
+                val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
+                if (bitmap != null) {
+                    content.addView(ImageView(this).apply {
+                        setImageBitmap(bitmap)
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        adjustViewBounds = true
+                        contentDescription = "Scene ${scene.sceneNumber} image"
+                    }, LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(220)
+                    ))
+                } else {
+                    content.addView(TextView(this).apply {
+                        text = "Image file exists, but could not be displayed."
+                    })
+                }
+            } else {
+                content.addView(TextView(this).apply {
+                    text = "Image not available yet."
+                })
+            }
+
+            content.addView(View(this).apply {
+                setBackgroundColor(Color.LTGRAY)
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(1)
+            ))
+        }
+
+        val scroll = ScrollView(this).apply {
+            addView(content)
+        }
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Scene Images")
+            .setView(scroll)
+            .setPositiveButton("Done", null)
+            .show()
     }
 
     private fun generateSceneImages() {
