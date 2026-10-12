@@ -377,8 +377,11 @@ class ProjectWorkspaceActivity : Activity() {
                         "Keep the local image server running in Termux."
                     )
                     .setNegativeButton("Cancel", null)
-                    .setNeutralButton("View Scenes") { _, _ ->
-                        showSceneImages()
+                    .setNeutralButton("View Gallery") { _, _ ->
+                        startActivity(
+                            Intent(this, SceneGalleryActivity::class.java)
+                                .putExtra("project_id", project.id)
+                        )
                     }
                     .setPositiveButton("Generate Images") { _, _ ->
                         generateSceneImages()
