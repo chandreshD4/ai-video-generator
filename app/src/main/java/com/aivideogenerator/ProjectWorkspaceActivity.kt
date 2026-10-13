@@ -632,6 +632,33 @@ class ProjectWorkspaceActivity : Activity() {
     }
 
     private fun generateSceneImages() {
+        val pendingCheck = project.scenes.filter { it.imagePath.isBlank() }
+        if (pendingCheck.isEmpty()) {
+            Toast.makeText(this, "All scene images are already generated", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val ratioOptions = arrayOf("Square (1:1)", "Portrait (9:16)", "Landscape (16:9)")
+        var selectedRatio = 0
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Choose Image Size")
+            .setSingleChoiceItems(ratioOptions, 0) { _, which ->
+                selectedRatio = which
+            }
+            .setPositiveButton("Generate") { _, _ ->
+                val aspectRatio = when (selectedRatio) {
+                    1 -> "9:16"
+                    2 -> "16:9"
+                    else -> "1:1"
+                }
+                generateSceneImagesWithRatio(aspectRatio)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun generateSceneImagesWithRatio(aspectRatio: String) {
         val pending = project.scenes.filter { it.imagePath.isBlank() }
         if (pending.isEmpty()) {
             Toast.makeText(this, "All scene images are already generated", Toast.LENGTH_SHORT).show()
@@ -674,6 +701,7 @@ class ProjectWorkspaceActivity : Activity() {
             SceneImageGenerator.generate(
                 this,
                 scene.imagePrompt,
+                aspectRatio,
                 object : SceneImageGenerator.Callback {
                     override fun onSuccess(imagePath: String) {
                         project = project.copy(

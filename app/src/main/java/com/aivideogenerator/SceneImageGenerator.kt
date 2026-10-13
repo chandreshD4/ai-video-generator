@@ -29,6 +29,7 @@ object SceneImageGenerator {
     fun generate(
         context: Context,
         prompt: String,
+        aspectRatio: String = "1:1",
         callback: Callback
     ) {
         val appContext = context.applicationContext
@@ -40,8 +41,14 @@ object SceneImageGenerator {
 
         executor.execute {
             try {
+                val allowedRatios = setOf("1:1", "9:16", "16:9")
+                if (aspectRatio !in allowedRatios) {
+                    throw IllegalArgumentException("Invalid image aspect ratio")
+                }
+
                 val requestBody = JSONObject()
                     .put("prompt", prompt)
+                    .put("aspect_ratio", aspectRatio)
                     .toString()
                     .toByteArray(Charsets.UTF_8)
 

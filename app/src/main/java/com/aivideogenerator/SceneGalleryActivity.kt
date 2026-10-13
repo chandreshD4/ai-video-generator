@@ -118,6 +118,22 @@ class SceneGalleryActivity : Activity() {
             }
             card.addView(title)
 
+            val description = TextView(this).apply {
+                text = "Scene Script\n${scene.description}"
+                textSize = 14f
+                setTextColor(Color.LTGRAY)
+                setPadding(0, dp(8), 0, dp(4))
+            }
+            card.addView(description)
+
+            val promptText = TextView(this).apply {
+                text = "Image Prompt\n${scene.imagePrompt}"
+                textSize = 13f
+                setTextColor(Color.rgb(190, 175, 220))
+                setPadding(0, dp(4), 0, dp(6))
+            }
+            card.addView(promptText)
+
             if (scene.imagePath.isNotBlank() && file.isFile) {
                 val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                 if (bitmap != null) {

@@ -97,6 +97,13 @@ class ImageGenHandler(BaseHTTPRequestHandler):
                 send_json(self, 400, {"error": "Prompt is required"})
                 return
 
+            aspect_ratio = data.get("aspect_ratio", "1:1")
+            dimensions = {"1:1": (1024, 1024), "9:16": (768, 1365), "16:9": (1365, 768)}
+            if aspect_ratio not in dimensions:
+                send_json(self, 400, {"error": "Invalid aspect_ratio"})
+                return
+            width, height = dimensions[aspect_ratio]
+
             if len(prompt) > MAX_PROMPT_LENGTH:
                 send_json(self, 400, {"error": "Prompt is too long"})
                 return
@@ -105,6 +112,7 @@ class ImageGenHandler(BaseHTTPRequestHandler):
             image_url = (
                 "https://gen.pollinations.ai/image/"
                 + quote(prompt, safe="")
+                + f"?width={width}&height={height}"
             )
 
             request = urllib.request.Request(
