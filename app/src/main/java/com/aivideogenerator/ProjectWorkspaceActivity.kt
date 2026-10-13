@@ -369,24 +369,113 @@ class ProjectWorkspaceActivity : Activity() {
                     projectStore.saveProject(project)
                 }
 
-                android.app.AlertDialog.Builder(this)
-                    .setTitle("Scenes & AI Images")
-                    .setMessage(
-                        "${project.scenes.size} scenes are ready. " +
-                        "Generating images may use Pollinations credits. " +
-                        "Keep the local image server running in Termux."
+                val dialogLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(24), dp(22), dp(24), dp(12))
+                    setBackgroundColor(Color.WHITE)
+                }
+
+                val dialogTitle = text(
+                    "Scenes & AI Images",
+                    22f,
+                    Color.BLACK,
+                    true
+                ).apply {
+                    setPadding(0, 0, 0, dp(10))
+                }
+                dialogLayout.addView(dialogTitle)
+
+                val dialogMessage = text(
+                    "${project.scenes.size} scenes are ready.\n\n" +
+                        "Generate images for your scenes, or view images already created.\n\n" +
+                        "Image generation may use Pollinations credits. Keep the local image server running in Termux.",
+                    15f,
+                    Color.rgb(45, 45, 45)
+                ).apply {
+                    setLineSpacing(dp(3).toFloat(), 1f)
+                }
+                dialogLayout.addView(
+                    dialogMessage,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
                     )
-                    .setNegativeButton("Cancel", null)
-                    .setNeutralButton("View Gallery") { _, _ ->
+                )
+
+                val dialogButtons = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(0, dp(18), 0, 0)
+                }
+
+                lateinit var popup: android.app.AlertDialog
+
+                val generateButton = Button(this).apply {
+                    text = "GENERATE IMAGES"
+                    isAllCaps = false
+                    setTextColor(Color.WHITE)
+                    background = background(Color.rgb(111, 66, 193), 12)
+                    setPadding(dp(12), dp(8), dp(12), dp(8))
+                    setOnClickListener {
+                        popup.dismiss()
+                        generateSceneImages()
+                    }
+                }
+
+                val galleryButton = Button(this).apply {
+                    text = "VIEW GALLERY"
+                    isAllCaps = false
+                    setTextColor(Color.rgb(70, 45, 120))
+                    background = background(Color.rgb(239, 231, 255), 12)
+                    setPadding(dp(12), dp(8), dp(12), dp(8))
+                    setOnClickListener {
+                        popup.dismiss()
                         startActivity(
-                            Intent(this, SceneGalleryActivity::class.java)
+                            Intent(this@ProjectWorkspaceActivity, SceneGalleryActivity::class.java)
                                 .putExtra("project_id", project.id)
                         )
                     }
-                    .setPositiveButton("Generate Images") { _, _ ->
-                        generateSceneImages()
-                    }
-                    .show()
+                }
+
+                dialogButtons.addView(
+                    generateButton,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = dp(10) }
+                )
+                dialogButtons.addView(
+                    galleryButton,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                dialogLayout.addView(dialogButtons)
+
+                val cancelRow = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.END
+                    setPadding(0, dp(12), 0, 0)
+                }
+                val cancelButton = Button(this).apply {
+                    text = "CANCEL"
+                    isAllCaps = false
+                    setTextColor(Color.rgb(70, 45, 120))
+                    background = background(Color.WHITE, 10, Color.rgb(220, 210, 235))
+                    setOnClickListener { popup.dismiss() }
+                }
+                cancelRow.addView(cancelButton)
+                dialogLayout.addView(cancelRow)
+
+                popup = android.app.AlertDialog.Builder(this)
+                    .setView(dialogLayout)
+                    .create()
+
+                popup.setOnShowListener {
+                    popup.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                }
+                popup.show()
+                popup.window?.setBackgroundDrawableResource(android.R.color.transparent)
             }
         }
 
